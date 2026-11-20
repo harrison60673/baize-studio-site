@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>白澤接案設計 — 網站 · 系統 · 流程自動化</title>
+<meta name="description" content="接案六年的獨立開發者。網站、後台系統、流程自動化,從需求訪談、介面設計到上線由同一個人完成,規格寫清楚了才動工。">
+<meta property="og:title" content="白澤接案設計 — 網站 · 系統 · 流程自動化">
+<meta property="og:description" content="接案六年的獨立開發者。網站、後台系統、流程自動化,從需求訪談、介面設計到上線由同一個人完成,規格寫清楚了才動工。">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!--
+  中文交給系統字型，避免同一頁下載 Noto Sans / Serif TC 的數十個
+  Unicode 分片。三套輕量拉丁字型合併成一個請求。
+-->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Bitcount+Grid+Single&family=DM+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitcount+Grid+Single&family=DM+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap"></noscript>
+
+<link rel="stylesheet" href="/public/dist/site.min.css?v=b30253cbaf10">
+
+
+
+</head>
+<body>
+  
+<div id="home-intro" class="home-intro" hidden>
+  <div class="home-intro-mark" aria-hidden="true">
+<svg width="150" height="62" viewBox="0 0 240 100" fill="none" aria-hidden="true">
+  <!-- 貓耳(依白澤最終設計 .dc (1).html:頭頂兩角、外斜) -->
+  <path d="M 31 21 L 26 3 L 46 13" stroke="oklch(0.94 0.008 85)" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 209 21 L 214 3 L 194 13" stroke="oklch(0.94 0.008 85)" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 34 18 C 12 18 12 82 34 82" stroke="oklch(0.94 0.008 85)" stroke-width="5" stroke-linecap="round"/>
+  <path d="M 206 18 C 228 18 228 82 206 82" stroke="oklch(0.94 0.008 85)" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="92" cy="50" r="21" fill="oklch(0.62 0.14 250)"/>
+  
+  <circle cx="148" cy="50" r="21" fill="oklch(0.76 0.14 95)"/>
+  
+</svg>
+</div>
+  <button type="button" class="home-intro-skip">略過開場 →</button>
+</div>
+<script>
+(function () {
+  var KEY = 'baize-home-intro-seen';
+  var seen = false;
+  try { seen = sessionStorage.getItem(KEY) === '1'; } catch (e) {}
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var saveData = navigator.connection && navigator.connection.saveData;
+  if (seen || reduce || saveData || location.hash) return;
+
+  var root = document.getElementById('home-intro');
+  var html = document.documentElement;
+  var finished = false;
+  var loadTimer;
+  var frame = document.createElement('iframe');
+
+  function onKey(e) { if (e.key === 'Escape') finish(); }
+
+  function finish() {
+    if (finished) return;
+    finished = true;
+    clearTimeout(loadTimer);
+    try { sessionStorage.setItem(KEY, '1'); } catch (e) {}
+    window.removeEventListener('message', onMessage);
+    window.removeEventListener('keydown', onKey);
+    html.classList.remove('home-intro-lock');
+    root.classList.add('is-leaving');
+    setTimeout(function () { root.remove(); }, 600);
+  }
+
+  function onMessage(e) {
+    if (e.origin !== location.origin || !e.data) return;
+    if (e.data.type === 'baize:intro-ready') {
+      clearTimeout(loadTimer);
+      root.classList.add('is-playing');
+      frame.focus();
+    } else if (e.data.type === 'baize:intro-done' || e.data.type === 'baize:intro-skip') {
+      finish();
+    }
+  }
+
+  root.hidden = false;
+  html.classList.add('home-intro-lock');
+  window.addEventListener('message', onMessage);
+  window.addEventListener('keydown', onKey);
+  root.querySelector('.home-intro-skip').addEventListener('click', finish);
+  // 網路太慢或 WebGL 無法執行時，不讓訪客一直等。
+  loadTimer = setTimeout(finish, 6000);
+
+  frame.className = 'home-intro-frame';
+  frame.title = '白澤開場動畫，往下捲動瀏覽';
+  frame.src = '/public/demos/helix/?intro=1';
+  root.insertBefore(frame, root.firstChild);
+})();
+</script>
+
+  <nav class="site-nav" aria-label="主要導覽">
+  <a class="site-nav-brand" href="/" aria-label="回首頁">
+    
+<svg width="62" height="26" viewBox="0 0 240 100" fill="none" aria-hidden="true">
+  <!-- 貓耳(依白澤最終設計 .dc (1).html:頭頂兩角、外斜) -->
+  <path d="M 31 21 L 26 3 L 46 13" stroke="oklch(0.94 0.008 85)" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 209 21 L 214 3 L 194 13" stroke="oklch(0.94 0.008 85)" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 34 18 C 12 18 12 82 34 82" stroke="oklch(0.94 0.008 85)" stroke-width="7" stroke-linecap="round"/>
+  <path d="M 206 18 C 228 18 228 82 206 82" stroke="oklch(0.94 0.008 85)" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="92" cy="50" r="21" fill="oklch(0.62 0.14 250)"/>
+  
+  <circle cx="148" cy="50" r="21" fill="oklch(0.76 0.14 95)"/>
+  
+</svg>
+
+    <div class="divider"></div>
+    <div class="brand-name">白澤</div>
+  </a>
+  <div class="nav-desktop">
+    
+      <a href="/#lab">3D LAB</a>
+    
+      <a href="/#about">ABOUT</a>
+    
+      <a href="/#work">WORK</a>
+    
+      <a href="/#services">SERVICES</a>
+    
+      <a href="/#workbench">DEMO</a>
+    
+      <a href="/#voices">VOICES</a>
+    
+    <a class="nav-cta" href="/#contact">START →</a>
+  </div>
+  <details class="mobile-nav">
+    <summary>MENU</summary>
+    <div class="mobile-nav-menu">
+      
+        <a href="/#lab">3D LAB</a>
+      
+        <a href="/#about">ABOUT</a>
+      
+        <a href="/#work">WORK</a>
+      
+        <a href="/#services">SERVICES</a>
+      
+        <a href="/#workbench">DEMO</a>
+      
+        <a href="/#voices">VOICES</a>
+      
+      <a class="mobile-nav-cta" href="/#contact">START →</a>
+    </div>
+  </details>
+</nav>
+
+  <main>
+    <section class="hero-section">
+  <div class="hero-eyebrow">FREELANCE DESIGN &amp; DEVELOPMENT — TAIPEI</div>
+
+  <!-- 巨型展示字 × 貓臉:兩個字對應異色瞳的兩種看法 -->
+  <div class="hero-band">
+    <span class="hero-display is-logic">LOGIC</span>
+    <div class="hero-mark">
+      
+<svg width="300" height="125" viewBox="0 0 240 100" fill="none" aria-hidden="true">
+  <!-- 貓耳(依白澤最終設計 .dc (1).html:頭頂兩角、外斜) -->
+  <path d="M 31 21 L 26 3 L 46 13" stroke="oklch(0.94 0.008 85)" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 209 21 L 214 3 L 194 13" stroke="oklch(0.94 0.008 85)" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 34 18 C 12 18 12 82 34 82" stroke="oklch(0.94 0.008 85)" stroke-width="4" stroke-linecap="round"/>
+  <path d="M 206 18 C 228 18 228 82 206 82" stroke="oklch(0.94 0.008 85)" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="92" cy="50" r="21" fill="oklch(0.62 0.14 250)"/>
+  <circle class="eye-pupil" data-mx="8" data-my="6" cx="92" cy="50" r="7" fill="oklch(0.2 0.012 60)"/>
+  <circle cx="148" cy="50" r="21" fill="oklch(0.76 0.14 95)"/>
+  <ellipse class="eye-pupil" data-mx="10" data-my="4" cx="148" cy="50" rx="3.4" ry="12" fill="oklch(0.2 0.012 60)"/>
+</svg>
+
+    </div>
+    <span class="hero-display is-aesthetic">AESTHETIC</span>
+  </div>
+
+  <div class="hero-copy">
+    <h1 class="hero-title">一邊看邏輯<br>一邊看美感</h1>
+    <p class="hero-desc">網站、後台系統、流程自動化。從需求訪談、介面設計到上線部署由同一個人完成,規格寫清楚了才動工。</p>
+    <div class="hero-actions">
+      
+        <a class="btn btn-solid" href="#work">SELECTED WORK</a>
+      
+        <a class="btn btn-outline" href="#contact">免費諮詢 30 MIN</a>
+      
+    </div>
+    <div class="hero-mark-note">( ● ● ) — heterochromia in brackets</div>
+  </div>
+</section>
+
+    
+<div class="marquee" aria-hidden="true" data-marquee data-marquee-dir="-1">
+  <div class="marquee-track">
+    
+      <span class="marquee-item">WEBSITE</span>
+      <span class="marquee-cat">
+<svg width="52" height="22" viewBox="0 0 240 100" fill="none" aria-hidden="true">
+  <!-- 貓耳(依白澤最終設計 .dc (1).html:頭頂兩角、外斜) -->
+  <path d="M 31 21 L 26 3 L 46 13" stroke="oklch(0.94 0.008 85)" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 209 21 L 214 3 L 194 13" stroke="oklch(0.94 0.008 85)" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 34 18 C 12 18 12 82 34 82" stroke="oklch(0.94 0.008 85)" stroke-width="8" stroke-linecap="round"/>
+  <path d="M 206 18 C 228 18 228 82 206 82" stroke="oklch(0.94 0.008 85)" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="92" cy="50" r="21" fill="oklch(0.62 0.14 250)"/>
+  
+  <circle cx="148" cy="50" r="21" fill="oklch(0.76 0.14 95)"/>
+  
+</svg>
+</span>
+    
+      <span class="marquee-item">SYSTEM</span>
+      <span class="marquee-cat">
+<svg width="52" height="22" viewBox="0 0 240 100" fill="none" aria-hidden="true">
+  <!-- 貓耳(依白澤最終設計 .dc (1).html:頭頂兩角、外斜) -->
+  <path d="M 31 21 L 26 3 L 46 13" stroke="oklch(0.94 0.008 85)" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 209 21 L 214 3 L 194 13" stroke="oklch(0.94 0.008 85)" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 34 18 C 12 18 12 82 34 82" stroke="oklch(0.94 0.008 85)" stroke-width="8" stroke-linecap="round"/>
+  <path d="M 206 18 C 228 18 228 82 206 82" stroke="oklch(0.94 0.008 85)" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="92" cy="50" r="21" fill="oklch(0.62 0.14 250)"/>
+  
+  <circle cx="148" cy="50" r="21" fill="oklch(0.76 0.14 95)"/>
+  
+</svg>
+</span>
+    
+      <span class="marquee-item">AUTOMATION</span>
+      <span class="marquee-cat">
+<svg width="52" height="22" viewBox="0 0 240 100" fill="none" aria-hidden="true">
+  <!-- 貓耳(依白澤最終設計 .dc (1).html:頭頂兩角、外斜) -->
+  <path d="M 31 21 L 26 3 L 46 13" stroke="oklch(0.94 0.008 85)" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 209 21 L 214 3 L 194 13" stroke="oklch(0.94 0.008 85)" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 34 18 C 12 18 12 82 34 82" stroke="oklch(0.94 0.008 85)" stroke-width="8" stroke-linecap="round"/>
+  <path d="M 206 18 C 228 18 228 82 206 82" stroke="oklch(0.94 0.008 85)" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="92" cy="50" r="21" fill="oklch(0.62 0.14 250)"/>
+  
+  <circle cx="148" cy="50" r="21" fill="oklch(0.76 0.14 95)"/>
+  
+</svg>
+</span>
+    
+      <span class="marquee-item">UI · UX</span>
+      <span class="marquee-cat">
+<svg width="52" height="22" viewBox="0 0 240 100" fill="none" aria-hidden="true">
+  <!-- 貓耳(依白澤最終設計 .dc (1).html:頭頂兩角、外斜) -->
+  <path d="M 31 21 L 26 3 L 46 13" stroke="oklch(0.94 0.008 85)" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 209 21 L 214 3 L 194 13" stroke="oklch(0.94 0.008 85)" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 34 18 C 12 18 12 82 34 82" stroke="oklch(0.94 0.008 85)" stroke-width="8" stroke-linecap="round"/>
+  <path d="M 206 18 C 228 18 228 82 206 82" stroke="oklch(0.94 0.008 85)" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="92" cy="50" r="21" fill="oklch(0.62 0.14 250)"/>
+  
+  <circle cx="148" cy="50" r="21" fill="oklch(0.76 0.14 95)"/>
+  
+</svg>
+</span>
+    
+  </div>
+</div>
+
+    <section id="lab" class="section-block lab-section">
+  <a class="lab-feature" href="/public/demos/exploded-burger/">
+    <div class="lab-copy">
+      <div class="eyebrow">LAB / 3D 互動實驗室</div>
+      <h2 class="lab-title">往下滑，看一顆漢堡<br>一層一層炸開</h2>
+      <p class="lab-desc">即時 3D 產品拆解：捲動讓它慢慢炸開，每個零件依序轉一圈，再組回完整的樣子。同樣的做法也能用來介紹設備、模組與材質。</p>
+      <span class="btn btn-solid lab-cta">進入 3D 拆解 →</span>
+      <span class="lab-meta">FX 17 · REAL-TIME 3D · 可加購</span>
+    </div>
+    <div class="lab-visual" aria-hidden="true">
+      <img src="/public/demos/exploded-burger/assets/poster.webp" alt="" loading="lazy" width="720" height="900">
+    </div>
+  </a>
+</section>
+
+    <section class="stats-grid" aria-label="關鍵數據">
+  
+    <div class="stat-card">
+      <div class="stat-value">6 年</div>
+      <div class="stat-label">FREELANCING</div>
+    </div>
+  
+    <div class="stat-card">
+      <div class="stat-value">40+</div>
+      <div class="stat-label">PROJECTS</div>
+    </div>
+  
+    <div class="stat-card">
+      <div class="stat-value">24 hr</div>
+      <div class="stat-label">REPLY TIME</div>
+    </div>
+  
+    <div class="stat-card">
+      <div class="stat-value">2 週後</div>
+      <div class="stat-label">NEXT SLOT</div>
+    </div>
+  
+</section>
+
+    <section id="about" class="split-section">
+  <div class="split-head">
+    <div class="eyebrow">01 / ABOUT</div>
+    <h2 class="section-heading">關於我</h2>
+  </div>
+  <div class="about-body">
+    <p class="about-text">接案六年的獨立開發者,主要服務中小企業與新創。合作時你只需要面對一個人:需求、設計、開發、上線、維護都由我負責,訊息不會在團隊之間走失。工作室的名字來自我的貓白澤——一隻異色瞳的白貓,負責在旁邊監工。</p>
+    <div class="skills-grid">
+      
+        <div class="skill-card">
+          <div class="skill-label">FRONTEND</div>
+          <div class="skill-items">React / Next.js<br>TypeScript<br>Tailwind</div>
+        </div>
+      
+        <div class="skill-card">
+          <div class="skill-label">BACKEND</div>
+          <div class="skill-items">Node / Python<br>PostgreSQL<br>REST / GraphQL</div>
+        </div>
+      
+        <div class="skill-card">
+          <div class="skill-label">DESIGN</div>
+          <div class="skill-items">Figma<br>UI / UX<br>Design System</div>
+        </div>
+      
+    </div>
+  </div>
+</section>
+
+    <section id="work" class="section-block">
+  <div class="work-header">
+    <div class="split-head">
+      <div class="eyebrow">02 / WORK</div>
+      <h2 class="section-heading">近期選錄</h2>
+    </div>
+    <div class="work-header-note">FULL CASE STUDIES ON REQUEST</div>
+  </div>
+  <div class="work-list">
+    
+      
+        <a class="work-row work-row-link" href="/work/online-tutoring" aria-label="線上課程預約與金流平台 — 看設計與技術">
+      
+        <div class="work-num accent-yellow">001</div>
+        <div class="work-titlebox">
+          <h3 class="work-title">線上課程預約與金流平台</h3>
+          <div class="work-meta">ONLINE TUTORING · 2026</div>
+          <div class="work-cue">看設計與技術 →</div>
+        </div>
+        <p class="work-summary">學生預約、購買堂數與線上金流,搭配老師後台與運營報表三端共用一套系統,支援多語系與視訊上課連結。</p>
+        <div class="work-stack">React<br>Firebase</div>
+      </a>
+    
+      
+        <article class="work-row">
+      
+        <div class="work-num accent-blue">002</div>
+        <div class="work-titlebox">
+          <h3 class="work-title">預約與排班系統</h3>
+          <div class="work-meta">DENTAL CLINIC · 2025</div>
+          
+        </div>
+        <p class="work-summary">線上預約、候補與後台排班一次整理,上線三個月電話預約量下降約六成。</p>
+        <div class="work-stack">Next.js<br>Postgres</div>
+      </article>
+    
+      
+        <article class="work-row">
+      
+        <div class="work-num accent-yellow">003</div>
+        <div class="work-titlebox">
+          <h3 class="work-title">選物品牌形象網站</h3>
+          <div class="work-meta">LIFESTYLE RETAIL · 2025</div>
+          
+        </div>
+        <p class="work-summary">品牌語氣、字級系統到內容管理後台,設計到上線共五週,編輯自己排專題頁。</p>
+        <div class="work-stack">Figma<br>Headless CMS</div>
+      </article>
+    
+      
+        <article class="work-row">
+      
+        <div class="work-num accent-blue">004</div>
+        <div class="work-titlebox">
+          <h3 class="work-title">出貨與對帳自動化</h3>
+          <div class="work-meta">E-COMMERCE · 2024</div>
+          
+        </div>
+        <p class="work-summary">訂單、金流與物流報表串成一條流程,每週省下約十小時人工核帳。</p>
+        <div class="work-stack">Python<br>API</div>
+      </article>
+    
+  </div>
+</section>
+
+    <section id="services" class="section-block">
+  <div class="split-head">
+    <div class="eyebrow">03 / SERVICES</div>
+    <h2 class="section-heading">服務項目與報價</h2>
+  </div>
+  <div class="services-grid">
+    
+      <div class="service-card ">
+        <div class="service-head">
+          <div class="service-name">形象網站</div>
+          
+        </div>
+        <div class="service-price">NT$ 45,000+</div>
+        <div class="service-duration">3–5 WEEKS</div>
+        <div class="service-features">UI 設計與切版<br>響應式版型<br>SEO 與速度優化<br>表單與追蹤設定<br>上線後 30 天保固</div>
+      </div>
+    
+      <div class="service-card is-popular">
+        <div class="service-head">
+          <div class="service-name">系統與後台</div>
+          <div class="service-badge">POPULAR</div>
+        </div>
+        <div class="service-price">NT$ 90,000+</div>
+        <div class="service-duration">6–10 WEEKS</div>
+        <div class="service-features">需求訪談與規格文件<br>會員 / 權限 / 金流<br>資料庫設計與 API<br>管理後台與報表<br>部署與交接文件</div>
+      </div>
+    
+      <div class="service-card ">
+        <div class="service-head">
+          <div class="service-name">維護與顧問</div>
+          
+        </div>
+        <div class="service-price">NT$ 8,000 / 月</div>
+        <div class="service-duration">MONTHLY</div>
+        <div class="service-features">每月 8 小時工時<br>功能微調與修錯<br>監控與資安更新<br>技術選型諮詢<br>優先回覆</div>
+      </div>
+    
+  </div>
+  <div class="services-foot">起價依功能範圍與時程調整 · 首次諮詢與初步估算免費</div>
+
+  <div class="module-catalog workbench-catalog" id="workbench">
+    <div class="module-catalog-head">
+      <div>
+        <div class="eyebrow">WORKBENCH / 需求工作台</div>
+        <h3 class="module-catalog-title">還不確定要做什麼？先跑一次需求</h3>
+      </div>
+      <p class="module-catalog-intro">選擇案型、輸入品牌與需求，比較五種版型、試玩互動效果，最後整理成一份可以帶走的需求規格草案。</p>
+    </div>
+
+    <article class="ui-module-card workbench-card">
+      <a class="workbench-shot" href="/public/demos/workbench/" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true">
+        <img src="/public/demos/workbench/preview.jpg" alt="" loading="lazy" width="960" height="600">
+      </a>
+      <div class="module-card-body">
+        <ol class="workbench-steps">
+          <li>輸入需求</li><li>模擬生成五版</li><li>比較並選用</li><li>挑選互動效果</li><li>整理規格草案</li>
+        </ol>
+        <ul class="workbench-modes">
+          <li><strong>科技探索</strong><span>數字雨、聚光與逐項解鎖</span></li><li><strong>企業提案</strong><span>直接展開功能與作業細節</span></li><li><strong>品牌共創</strong><span>從品牌故事與風格開始聊</span></li>
+        </ul>
+        <a class="workbench-cta" href="/public/demos/workbench/" target="_blank" rel="noopener">開啟需求工作台 ↗</a>
+        <p class="workbench-note">互動原型：依案型呈現預設內容，沒有即時 AI 生成。費用僅為展示示意，不是正式報價；需求只存在你的瀏覽器，不會上傳。</p>
+      </div>
+    </article>
+  </div>
+
+  <div class="module-catalog template-catalog" id="templates">
+    <div class="module-catalog-head">
+      <div>
+        <div class="eyebrow">TEMPLATES / 版型示範</div>
+        <h3 class="module-catalog-title">同一份內容，五種性格</h3>
+      </div>
+      <p class="module-catalog-intro">以虛構品牌「好日健身」示範：內容相同、版型不同。每一款都可以點開實際操作，再換成你的品牌與內容。</p>
+    </div>
+
+    <div class="ui-module-grid">
+      
+        <article class="ui-module-card template-card">
+          <div class="module-preview template-preview" aria-hidden="true">
+            <img src="/public/demos/templates/previews/editorial.jpg" alt="" loading="lazy" width="960" height="600">
+          </div>
+          <div class="module-card-body">
+            <div class="module-code">TEMPLATE 01</div>
+            <h4 class="module-name">日式留白</h4>
+            <p class="module-description">大量留白與細緻字級，讓內容慢慢被讀完，氣質安靜。</p>
+            <div class="module-fit"><span>適合</span>設計工作室 · 選物品牌 · 顧問服務</div>
+            <div class="effect-source"><a href="/public/demos/templates/editorial.html" target="_blank" rel="noopener">開啟完整版型 ↗</a></div>
+          </div>
+        </article>
+      
+        <article class="ui-module-card template-card">
+          <div class="module-preview template-preview" aria-hidden="true">
+            <img src="/public/demos/templates/previews/botanical.jpg" alt="" loading="lazy" width="960" height="600">
+          </div>
+          <div class="module-card-body">
+            <div class="module-code">TEMPLATE 02</div>
+            <h4 class="module-name">自然質感</h4>
+            <p class="module-description">柔和大地色與有機版面，傳達溫度與日常感。</p>
+            <div class="module-fit"><span>適合</span>餐飲 · 療癒空間 · 生活風格</div>
+            <div class="effect-source"><a href="/public/demos/templates/botanical.html" target="_blank" rel="noopener">開啟完整版型 ↗</a></div>
+          </div>
+        </article>
+      
+        <article class="ui-module-card template-card">
+          <div class="module-preview template-preview" aria-hidden="true">
+            <img src="/public/demos/templates/previews/studio.jpg" alt="" loading="lazy" width="960" height="600">
+          </div>
+          <div class="module-card-body">
+            <div class="module-code">TEMPLATE 03</div>
+            <h4 class="module-name">大膽編排</h4>
+            <p class="module-description">巨型標題與強烈對比，第一眼就記住品牌態度。</p>
+            <div class="module-fit"><span>適合</span>創意品牌 · 活動 · 新產品上市</div>
+            <div class="effect-source"><a href="/public/demos/templates/studio.html" target="_blank" rel="noopener">開啟完整版型 ↗</a></div>
+          </div>
+        </article>
+      
+        <article class="ui-module-card template-card">
+          <div class="module-preview template-preview" aria-hidden="true">
+            <img src="/public/demos/templates/previews/ocean.jpg" alt="" loading="lazy" width="960" height="600">
+          </div>
+          <div class="module-card-body">
+            <div class="module-code">TEMPLATE 04</div>
+            <h4 class="module-name">深海沉浸</h4>
+            <p class="module-description">深色漸層與流動光影，營造沉浸的品牌氛圍。</p>
+            <div class="module-fit"><span>適合</span>展演 · 旅宿 · 高單價服務</div>
+            <div class="effect-source"><a href="/public/demos/templates/ocean.html" target="_blank" rel="noopener">開啟完整版型 ↗</a></div>
+          </div>
+        </article>
+      
+        <article class="ui-module-card template-card">
+          <div class="module-preview template-preview" aria-hidden="true">
+            <img src="/public/demos/templates/previews/matrix.jpg" alt="" loading="lazy" width="960" height="600">
+          </div>
+          <div class="module-card-body">
+            <div class="module-code">TEMPLATE 05</div>
+            <h4 class="module-name">駭客任務</h4>
+            <p class="module-description">黑底綠字與終端機語彙，科技感直接拉滿。</p>
+            <div class="module-fit"><span>適合</span>科技新創 · 資安 · 開發者工具</div>
+            <div class="effect-source"><a href="/public/demos/templates/matrix.html" target="_blank" rel="noopener">開啟完整版型 ↗</a></div>
+          </div>
+        </article>
+      
+    </div>
+
+    <div class="module-catalog-note">
+      <span>版型可依品牌調整色彩、字體與區塊。</span>
+      <a href="#contact">聊聊適合哪一款 →</a>
+    </div>
+  </div>
+
+  <div class="module-catalog effect-catalog" id="effects">
+    <div class="module-catalog-head">
+      <div>
+        <div class="eyebrow">INTERACTION MENU / 互動效果加購</div>
+        <h3 class="module-catalog-title">讓網站被記住的那一點動態</h3>
+      </div>
+      <p class="module-catalog-intro">以下是可整合到 Framer 網站的互動元件；非 Framer 專案也能依效果重新實作。費用包含品牌客製、響應式、觸控替代方案與效能調整，不是轉售原始元件。</p>
+    </div>
+
+    <div class="ui-module-grid effect-grid">
+      
+        <article class="ui-module-card effect-card" data-effect-card="ripple-background">
+          <div class="module-preview effect-preview is-ripple" data-effect-preview="ripple" aria-hidden="true">
+            
+            
+            
+              <div class="fx-ripple-grid"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i><i style="--i:5"></i><i style="--i:6"></i><i style="--i:7"></i><i style="--i:8"></i><i style="--i:9"></i><i style="--i:10"></i><i style="--i:11"></i><i style="--i:12"></i><i style="--i:13"></i><i style="--i:14"></i><i style="--i:15"></i><i style="--i:16"></i><i style="--i:17"></i><i style="--i:18"></i><i style="--i:19"></i><i style="--i:20"></i><i style="--i:21"></i><i style="--i:22"></i><i style="--i:23"></i><i style="--i:24"></i><i style="--i:25"></i><i style="--i:26"></i><i style="--i:27"></i><i style="--i:28"></i><i style="--i:29"></i><i style="--i:30"></i><i style="--i:31"></i><i style="--i:32"></i><i style="--i:33"></i><i style="--i:34"></i><i style="--i:35"></i><i style="--i:36"></i><i style="--i:37"></i><i style="--i:38"></i><i style="--i:39"></i><i style="--i:40"></i><i style="--i:41"></i><i style="--i:42"></i><i style="--i:43"></i><i style="--i:44"></i><i style="--i:45"></i><i style="--i:46"></i><i style="--i:47"></i></div>
+              <span class="fx-ripple-ring"></span>
+            
+          </div>
+
+          <div class="module-card-body">
+            <div class="module-code">FX 01</div>
+            <h4 class="module-name">漣漪格點背景</h4>
+            <p class="module-description">游標經過或點擊時，波紋從格點向外擴散，讓主視覺產生空間感。</p>
+            <ul class="module-features">
+              <li>滑鼠與點擊回饋</li><li>顏色 / 速度 / 密度調整</li><li>行動裝置降級效果</li>
+            </ul>
+            <div class="module-fit"><span>適合</span>科技品牌 · 作品集 · Hero 背景</div>
+            <div class="effect-source"><a href="https://www.framer.com/community/marketplace/components/ripple-background/" target="_blank" rel="noopener noreferrer">查看原始效果 ↗</a></div>
+            <div class="module-card-foot">
+              <span>依效果與頁面數估價</span>
+              <button class="module-add" type="button" data-effect-select="ripple-background" aria-pressed="false">加入需求 ＋</button>
+            </div>
+          </div>
+        </article>
+      
+        <article class="ui-module-card effect-card" data-effect-card="hover-force">
+          <div class="module-preview effect-preview is-force" data-effect-preview="force" aria-hidden="true">
+            
+            
+            
+              <div class="fx-force-core">FORCE</div>
+              <div class="fx-force-dots"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i><i style="--i:5"></i><i style="--i:6"></i><i style="--i:7"></i><i style="--i:8"></i><i style="--i:9"></i><i style="--i:10"></i><i style="--i:11"></i></div>
+            
+          </div>
+
+          <div class="module-card-body">
+            <div class="module-code">FX 02</div>
+            <h4 class="module-name">吸引／排斥懸浮互動</h4>
+            <p class="module-description">元素會跟著游標靠近或退開，做出帶重量與彈性的磁力回饋。</p>
+            <ul class="module-features">
+              <li>吸引或排斥模式</li><li>作用範圍與位移強度</li><li>方向與平滑度控制</li>
+            </ul>
+            <div class="module-fit"><span>適合</span>按鈕 · 圖示 · 特色內容</div>
+            <div class="effect-source"><a href="https://hover-force.learnframer.site" target="_blank" rel="noopener noreferrer">查看原始效果 ↗</a></div>
+            <div class="module-card-foot">
+              <span>依效果與頁面數估價</span>
+              <button class="module-add" type="button" data-effect-select="hover-force" aria-pressed="false">加入需求 ＋</button>
+            </div>
+          </div>
+        </article>
+      
+        <article class="ui-module-card effect-card" data-effect-card="magnetizing-lines">
+          <div class="module-preview effect-preview is-magnet" data-effect-preview="magnet" aria-hidden="true">
+            
+            
+            
+              <div class="fx-magnet-grid"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i><i style="--i:5"></i><i style="--i:6"></i><i style="--i:7"></i><i style="--i:8"></i><i style="--i:9"></i><i style="--i:10"></i><i style="--i:11"></i><i style="--i:12"></i><i style="--i:13"></i><i style="--i:14"></i><i style="--i:15"></i><i style="--i:16"></i><i style="--i:17"></i><i style="--i:18"></i><i style="--i:19"></i><i style="--i:20"></i><i style="--i:21"></i><i style="--i:22"></i><i style="--i:23"></i><i style="--i:24"></i><i style="--i:25"></i><i style="--i:26"></i><i style="--i:27"></i><i style="--i:28"></i><i style="--i:29"></i><i style="--i:30"></i><i style="--i:31"></i><i style="--i:32"></i><i style="--i:33"></i><i style="--i:34"></i><i style="--i:35"></i><i style="--i:36"></i><i style="--i:37"></i><i style="--i:38"></i><i style="--i:39"></i><i style="--i:40"></i><i style="--i:41"></i><i style="--i:42"></i><i style="--i:43"></i><i style="--i:44"></i><i style="--i:45"></i><i style="--i:46"></i><i style="--i:47"></i><i style="--i:48"></i><i style="--i:49"></i><i style="--i:50"></i><i style="--i:51"></i><i style="--i:52"></i><i style="--i:53"></i></div>
+            
+          </div>
+
+          <div class="module-card-body">
+            <div class="module-code">FX 03</div>
+            <h4 class="module-name">磁吸線條網格</h4>
+            <p class="module-description">線條會朝游標旋轉並縮放，形成像磁場或資料流一樣的科技紋理。</p>
+            <ul class="module-features">
+              <li>列數 / 欄數 / 間距</li><li>磁力半徑與衰減</li><li>線條尺寸與角度</li>
+            </ul>
+            <div class="module-fit"><span>適合</span>科技產品 · 展演網站 · 背景</div>
+            <div class="effect-source"><a href="https://www.framer.com/community/marketplace/components/magnetizinglines/" target="_blank" rel="noopener noreferrer">查看原始效果 ↗</a></div>
+            <div class="module-card-foot">
+              <span>依效果與頁面數估價</span>
+              <button class="module-add" type="button" data-effect-select="magnetizing-lines" aria-pressed="false">加入需求 ＋</button>
+            </div>
+          </div>
+        </article>
+      
+        <article class="ui-module-card effect-card" data-effect-card="hover-chroma">
+          <div class="module-preview effect-preview is-chroma" data-effect-preview="chroma" aria-hidden="true">
+            
+            
+            
+              <div class="fx-chroma-blob one"></div><div class="fx-chroma-blob two"></div><div class="fx-chroma-blob three"></div>
+              <span class="fx-preview-label">CHROMA</span>
+            
+          </div>
+
+          <div class="module-card-body">
+            <div class="module-code">FX 04</div>
+            <h4 class="module-name">流體彩度背景</h4>
+            <p class="module-description">色彩跟著游標流動與混合，能在黑色或白色背景上製造沉浸感。</p>
+            <ul class="module-features">
+              <li>Liquid / Smoke / Pixel 等風格</li><li>品牌色客製</li><li>全區塊響應式背景</li>
+            </ul>
+            <div class="module-fit"><span>適合</span>品牌主視覺 · 活動頁 · CTA</div>
+            <div class="effect-source"><a href="https://framer.university/resources/hover-chroma-backgrounds-in-framer" target="_blank" rel="noopener noreferrer">查看原始效果 ↗</a></div>
+            <div class="module-card-foot">
+              <span>依效果與頁面數估價</span>
+              <button class="module-add" type="button" data-effect-select="hover-chroma" aria-pressed="false">加入需求 ＋</button>
+            </div>
+          </div>
+        </article>
+      
+        <article class="ui-module-card effect-card" data-effect-card="xray-hover">
+          <div class="module-preview effect-preview is-xray" data-effect-preview="xray" aria-hidden="true">
+            
+            
+            
+              <iframe class="fx-xray-frame" data-preview-frame data-src="/public/demos/xray-hover.html?embed=1&amp;v=b30253cbaf10" title="X-Ray Hover 互動預覽" loading="lazy" sandbox="allow-scripts" tabindex="-1"></iframe>
+              <span class="fx-preview-label">MOVE CURSOR — X—RAY SCAN</span>
+            
+          </div>
+
+          <div class="module-card-body">
+            <div class="module-code">FX 05</div>
+            <h4 class="module-name">X-Ray 掃描揭露</h4>
+            <p class="module-description">游標光圈揭露第二層藍圖，搭配阻尼跟隨、座標網格與 CRT 掃描質感。</p>
+            <ul class="module-features">
+              <li>雙層影像 / SVG 遮罩</li><li>光圈、柔邊與跟隨阻尼</li><li>座標網格與訊號閃爍</li>
+            </ul>
+            <div class="module-fit"><span>適合</span>產品結構 · Before / After · 藝術視覺</div>
+            <div class="effect-source"><a href="/public/demos/xray-hover.html" target="_blank" rel="noopener noreferrer">開啟完整 X-Ray 版本 ↗</a></div>
+            <div class="module-card-foot">
+              <span>依效果與頁面數估價</span>
+              <button class="module-add" type="button" data-effect-select="xray-hover" aria-pressed="false">加入需求 ＋</button>
+            </div>
+          </div>
+        </article>
+      
+        <article class="ui-module-card effect-card" data-effect-card="liquid-image">
+          <div class="module-preview effect-preview is-liquid" data-effect-preview="liquid" aria-hidden="true">
+            
+            
+            
+              <iframe class="fx-liquid-frame" data-preview-frame data-src="/public/demos/liquid-distortion.html?embed=1&amp;v=b30253cbaf10" title="Liquid Distortion WebGL 互動預覽" loading="lazy" sandbox="allow-scripts" tabindex="-1"></iframe>
+              <span class="fx-preview-label">MOVE CURSOR — WEBGL FLUID</span>
+            
+          </div>
+
+          <div class="module-card-body">
+            <div class="module-code">FX 06</div>
+            <h4 class="module-name">WebGL 液態圖片扭曲</h4>
+            <p class="module-description">以速度場、壓力迭代與像素取樣即時扭曲圖片，游標移動就像在畫面上攪動液體。</p>
+            <ul class="module-features">
+              <li>原生 WebGL 流體模擬</li><li>游標與觸控攪動</li><li>圖片 / 筆刷 / 力道客製</li>
+            </ul>
+            <div class="module-fit"><span>適合</span>攝影 · 商品 · 作品案例</div>
+            <div class="effect-source"><a href="/public/demos/liquid-distortion.html" target="_blank" rel="noopener noreferrer">開啟完整互動版本 ↗</a></div>
+            <div class="module-card-foot">
+              <span>依效果與頁面數估價</span>
+              <button class="module-add" type="button" data-effect-select="liquid-image" aria-pressed="false">加入需求 ＋</button>
+            </div>
+          </div>
+        </article>
+      
+        <article class="ui-module-card effect-card" data-effect-card="liquid-distortion-reveal">
+          <div class="module-preview effect-preview is-liquid-reveal" data-effect-preview="liquid-reveal" aria-hidden="true">
+            
+            
+            
+              <iframe class="fx-liquid-frame fx-liquid-reveal-frame" data-preview-frame data-src="/public/demos/liquid-distortion-reveal.html?embed=1&amp;v=b30253cbaf10" title="Liquid Distortion Reveal WebGL 互動預覽" loading="lazy" sandbox="allow-scripts" tabindex="-1"></iframe>
+              <span class="fx-preview-label">MOVE CURSOR — REVEAL TEXT</span>
+            
+          </div>
+
+          <div class="module-card-body">
+            <div class="module-code">FX 07</div>
+            <h4 class="module-name">WebGL 液態文字揭露</h4>
+            <p class="module-description">以獨立 Reveal 流體場打開文字遮罩，攪動圖片時讓藏在表面下的訊息逐步浮現。</p>
+            <ul class="module-features">
+              <li>圖片扭曲＋文字揭露</li><li>顯現範圍與殘留時間</li><li>文字內容與透明度客製</li>
+            </ul>
+            <div class="module-fit"><span>適合</span>品牌宣言 · 活動主視覺 · 作品開場</div>
+            <div class="effect-source"><a href="/public/demos/liquid-distortion-reveal.html" target="_blank" rel="noopener noreferrer">開啟完整 Reveal 版本 ↗</a></div>
+            <div class="module-card-foot">
+              <span>依效果與頁面數估價</span>
+              <button class="module-add" type="button" data-effect-select="liquid-distortion-reveal" aria-pressed="false">加入需求 ＋</button>
+            </div>
+          </div>
+        </article>
+      
+        <article class="ui-module-card effect-card" data-effect-card="physics-text">
+          <div class="module-preview effect-preview is-physics" data-effect-preview="physics" aria-hidden="true">
+            
+            
+            
+              <div class="fx-physics-word"><span style="--i:0">B</span><span style="--i:1">A</span><span style="--i:2">I</span><span style="--i:3">Z</span><span style="--i:4">E</span></div>
+              <span class="fx-preview-label">PHYSICS TEXT</span>
+            
+          </div>
+
+          <div class="module-card-body">
+            <div class="module-code">FX 08</div>
+            <h4 class="module-name">物理感文字互動</h4>
+            <p class="module-description">字母會受到游標力量影響而位移、旋轉，再以彈性回到原位。</p>
+            <ul class="module-features">
+              <li>逐字物理動態</li><li>力道 / 阻尼 / 回彈</li><li>字型與品牌色設定</li>
+            </ul>
+            <div class="module-fit"><span>適合</span>大型標題 · 品牌名稱 · 活動頁</div>
+            <div class="effect-source"><a href="https://www.framer.com/community/marketplace/components/physics-text-hover/" target="_blank" rel="noopener noreferrer">查看原始效果 ↗</a></div>
+            <div class="module-card-foot">
+              <span>依效果與頁面數估價</span>
+              <button class="module-add" type="button" data-effect-select="physics-text" aria-pressed="false">加入需求 ＋</button>
+            </div>
+          </div>
+        </article>
+      
+        <article class="ui-module-card effect-card" data-effect-card="dynamic-media-text">
+          <div class="module-preview effect-preview is-media-text" data-effect-preview="media-text" aria-hidden="true">
+            
+            
+            
+              <div class="fx-media-list">
+                <div><span>Brand Story</span><i class="is-coral"></i></div>
+                <div><span>Digital Product</span><i class="is-cyan"></i></div>
+                <div><span>Visual System</span><i class="is-yellow"></i></div>
+              </div>
+              <span class="fx-preview-label">MEDIA TEXT</span>
+            
+          </div>
+
+          <div class="module-card-body">
+            <div class="module-code">FX 09</div>
+            <h4 class="module-name">動態媒體文字</h4>
+            <p class="module-description">滑過文字時展開對應圖片或影片，讓客戶不用離開列表就能預覽作品。</p>
+            <ul class="module-features">
+              <li>圖片 / 影片輪播</li><li>展開尺寸與速度</li><li>手機點擊替代互動</li>
+            </ul>
+            <div class="module-fit"><span>適合</span>作品列表 · 案例導覽 · 服務介紹</div>
+            <div class="effect-source"><a href="https://www.framer.com/marketplace/components/dynamic-media-text/" target="_blank" rel="noopener noreferrer">查看原始效果 ↗</a></div>
+            <div class="module-card-foot">
+              <span>依效果與頁面數估價</span>
+              <button class="module-add" type="button" data-effect-select="dynamic-media-text" aria-pressed="false">加入需求 ＋</button>
+            </div>
+          </div>
+        </article>
+      
+        <article class="ui-module-card effect-card" data-effect-card="interactive-noise-grid">
+          <div class="module-preview effect-preview is-noise-grid" data-effect-preview="noise-grid" aria-hidden="true">
+            
+            
+            
+              <div class="fx-noise-grid"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i><i style="--i:5"></i><i style="--i:6"></i><i style="--i:7"></i><i style="--i:8"></i><i style="--i:9"></i><i style="--i:10"></i><i style="--i:11"></i><i style="--i:12"></i><i style="--i:13"></i><i style="--i:14"></i><i style="--i:15"></i><i style="--i:16"></i><i style="--i:17"></i><i style="--i:18"></i><i style="--i:19"></i><i style="--i:20"></i><i style="--i:21"></i><i style="--i:22"></i><i style="--i:23"></i><i style="--i:24"></i><i style="--i:25"></i><i style="--i:26"></i><i style="--i:27"></i><i style="--i:28"></i><i style="--i:29"></i><i style="--i:30"></i><i style="--i:31"></i><i style="--i:32"></i><i style="--i:33"></i><i style="--i:34"></i><i style="--i:35"></i><i style="--i:36"></i><i style="--i:37"></i><i style="--i:38"></i><i style="--i:39"></i><i style="--i:40"></i><i style="--i:41"></i><i style="--i:42"></i><i style="--i:43"></i><i style="--i:44"></i><i style="--i:45"></i><i style="--i:46"></i><i style="--i:47"></i><i style="--i:48"></i><i style="--i:49"></i><i style="--i:50"></i><i style="--i:51"></i><i style="--i:52"></i><i style="--i:53"></i><i style="--i:54"></i><i style="--i:55"></i><i style="--i:56"></i><i style="--i:57"></i><i style="--i:58"></i><i style="--i:59"></i><i style="--i:60"></i><i style="--i:61"></i><i style="--i:62"></i><i style="--i:63"></i><i style="--i:64"></i><i style="--i:65"></i><i style="--i:66"></i><i style="--i:67"></i><i style="--i:68"></i><i style="--i:69"></i><i style="--i:70"></i><i style="--i:71"></i><i style="--i:72"></i><i style="--i:73"></i><i style="--i:74"></i><i style="--i:75"></i><i style="--i:76"></i></div>
+              <span class="fx-noise-orbit"></span>
+              <span class="fx-preview-label">NOISE GRID</span>
+            
+          </div>
+
+          <div class="module-card-body">
+            <div class="module-code">FX 10</div>
+            <h4 class="module-name">互動噪點網格</h4>
+            <p class="module-description">程序化噪點與網格會回應游標，替深色畫面增加細緻的空間深度。</p>
+            <ul class="module-features">
+              <li>網格密度與噪點強度</li><li>游標反應範圍</li><li>效能與動態降級</li>
+            </ul>
+            <div class="module-fit"><span>適合</span>科技品牌 · Hero · 區塊背景</div>
+            <div class="effect-source"><a href="https://www.framer.com/marketplace/components/interactivenoisegrid/" target="_blank" rel="noopener noreferrer">查看原始效果 ↗</a></div>
+            <div class="module-card-foot">
+              <span>依效果與頁面數估價</span>
+              <button class="module-add" type="button" data-effect-select="interactive-noise-grid" aria-pressed="false">加入需求 ＋</button>
+            </div>
+          </div>
+        </article>
+      
+        <article class="ui-module-card effect-card" data-effect-card="magnetic-button">
+          <div class="module-preview effect-preview is-magnetic-button" data-effect-preview="magnetic-button" aria-hidden="true">
+            
+            
+            
+              <div class="fx-magnetic-stage"><span>START A PROJECT</span><i>↗</i></div>
+              <span class="fx-preview-label">MAGNETIC CTA</span>
+            
+          </div>
+
+          <div class="module-card-body">
+            <div class="module-code">FX 11</div>
+            <h4 class="module-name">磁吸行動按鈕</h4>
+            <p class="module-description">按鈕會自然靠近游標並帶有光澤與箭頭動態，強化主要行動的吸引力。</p>
+            <ul class="module-features">
+              <li>磁吸距離與力道</li><li>光澤 / 色彩 / 圓角</li><li>連結與箭頭動態</li>
+            </ul>
+            <div class="module-fit"><span>適合</span>開始合作 · 詢價 · 主要 CTA</div>
+            <div class="effect-source"><a href="https://www.framer.com/marketplace/components/magneticbutton/" target="_blank" rel="noopener noreferrer">查看原始效果 ↗</a></div>
+            <div class="module-card-foot">
+              <span>依效果與頁面數估價</span>
+              <button class="module-add" type="button" data-effect-select="magnetic-button" aria-pressed="false">加入需求 ＋</button>
+            </div>
+          </div>
+        </article>
+      
+        <article class="ui-module-card effect-card" data-effect-card="hover-typography">
+          <div class="module-preview effect-preview is-variable-type" data-effect-preview="variable-type" aria-hidden="true">
+            
+            
+            
+              <div class="fx-variable-word"><span style="--i:0">B</span><span style="--i:1">A</span><span style="--i:2">I</span><span style="--i:3">Z</span><span style="--i:4">E</span></div>
+              <span class="fx-preview-label">VARIABLE TYPE</span>
+            
+          </div>
+
+          <div class="module-card-body">
+            <div class="module-code">FX 12</div>
+            <h4 class="module-name">可變字體感應</h4>
+            <p class="module-description">文字依游標位置改變粗細、寬度與傾斜，讓品牌標題更有表情。</p>
+            <ul class="module-features">
+              <li>字重 / 字寬變化</li><li>波浪 / 縮放 / 傾斜</li><li>逐字感應範圍</li>
+            </ul>
+            <div class="module-fit"><span>適合</span>品牌標題 · 宣言 · 章節開場</div>
+            <div class="effect-source"><a href="https://www.framer.com/community/marketplace/components/hover-typography/" target="_blank" rel="noopener noreferrer">查看原始效果 ↗</a></div>
+            <div class="module-card-foot">
+              <span>依效果與頁面數估價</span>
+              <button class="module-add" type="button" data-effect-select="hover-typography" aria-pressed="false">加入需求 ＋</button>
+            </div>
+          </div>
+        </article>
+      
+        <article class="ui-module-card effect-card" data-effect-card="interactive-pattern">
+          <div class="module-preview effect-preview is-pattern" data-effect-preview="pattern" aria-hidden="true">
+            
+            
+            
+              <div class="fx-pattern-grid"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i><i style="--i:5"></i><i style="--i:6"></i><i style="--i:7"></i><i style="--i:8"></i><i style="--i:9"></i><i style="--i:10"></i><i style="--i:11"></i><i style="--i:12"></i><i style="--i:13"></i><i style="--i:14"></i><i style="--i:15"></i><i style="--i:16"></i><i style="--i:17"></i><i style="--i:18"></i><i style="--i:19"></i><i style="--i:20"></i><i style="--i:21"></i><i style="--i:22"></i><i style="--i:23"></i><i style="--i:24"></i><i style="--i:25"></i><i style="--i:26"></i><i style="--i:27"></i><i style="--i:28"></i><i style="--i:29"></i><i style="--i:30"></i><i style="--i:31"></i><i style="--i:32"></i><i style="--i:33"></i><i style="--i:34"></i><i style="--i:35"></i><i style="--i:36"></i><i style="--i:37"></i><i style="--i:38"></i><i style="--i:39"></i><i style="--i:40"></i><i style="--i:41"></i><i style="--i:42"></i><i style="--i:43"></i><i style="--i:44"></i><i style="--i:45"></i><i style="--i:46"></i><i style="--i:47"></i><i style="--i:48"></i><i style="--i:49"></i><i style="--i:50"></i><i style="--i:51"></i><i style="--i:52"></i><i style="--i:53"></i><i style="--i:54"></i><i style="--i:55"></i><i style="--i:56"></i><i style="--i:57"></i><i style="--i:58"></i><i style="--i:59"></i></div>
+              <span class="fx-preview-label">INTERACTIVE PATTERN</span>
+            
+          </div>
+
+          <div class="module-card-body">
+            <div class="module-code">FX 13</div>
+            <h4 class="module-name">互動幾何紋理</h4>
+            <p class="module-description">點、線或十字紋理會在游標附近浮現，提供安靜但有回應的背景動態。</p>
+            <ul class="module-features">
+              <li>五種幾何樣式</li><li>間距 / 尺寸 / 色彩</li><li>鄰近淡入範圍</li>
+            </ul>
+            <div class="module-fit"><span>適合</span>企業網站 · 服務區塊 · 頁尾背景</div>
+            <div class="effect-source"><a href="https://www.framer.com/community/marketplace/components/interactive-pattern/" target="_blank" rel="noopener noreferrer">查看原始效果 ↗</a></div>
+            <div class="module-card-foot">
+              <span>依效果與頁面數估價</span>
+              <button class="module-add" type="button" data-effect-select="interactive-pattern" aria-pressed="false">加入需求 ＋</button>
+            </div>
+          </div>
+        </article>
+      
+        <article class="ui-module-card effect-card" data-effect-card="hover-text-glow">
+          <div class="module-preview effect-preview is-text-glow" data-effect-preview="text-glow" aria-hidden="true">
+            
+            
+            
+              <div class="fx-glow-word">SELECTED WORK</div>
+              <i class="fx-glow-bar"></i>
+              <span class="fx-preview-label">TEXT GLOW</span>
+            
+          </div>
+
+          <div class="module-card-body">
+            <div class="module-code">FX 14</div>
+            <h4 class="module-name">文字光暈揭露</h4>
+            <p class="module-description">文字從描邊轉為發光實心，搭配滑動光條，清楚提示可點擊內容。</p>
+            <ul class="module-features">
+              <li>描邊與填色切換</li><li>光暈與品牌色</li><li>連結及導覽狀態</li>
+            </ul>
+            <div class="module-fit"><span>適合</span>導覽列 · 作品名稱 · 次要 CTA</div>
+            <div class="effect-source"><a href="https://www.framer.com/community/marketplace/components/hover-text-glow/" target="_blank" rel="noopener noreferrer">查看原始效果 ↗</a></div>
+            <div class="module-card-foot">
+              <span>依效果與頁面數估價</span>
+              <button class="module-add" type="button" data-effect-select="hover-text-glow" aria-pressed="false">加入需求 ＋</button>
+            </div>
+          </div>
+        </article>
+      
+        <article class="ui-module-card effect-card" data-effect-card="animated-grid">
+          <div class="module-preview effect-preview is-animated-grid" data-effect-preview="animated-grid" aria-hidden="true">
+            
+            
+            
+              <div class="fx-animated-grid"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i><i style="--i:5"></i><i style="--i:6"></i><i style="--i:7"></i><i style="--i:8"></i><i style="--i:9"></i><i style="--i:10"></i><i style="--i:11"></i><i style="--i:12"></i><i style="--i:13"></i><i style="--i:14"></i><i style="--i:15"></i><i style="--i:16"></i><i style="--i:17"></i><i style="--i:18"></i><i style="--i:19"></i><i style="--i:20"></i><i style="--i:21"></i><i style="--i:22"></i><i style="--i:23"></i></div>
+              <span class="fx-preview-label">ANIMATED GRID</span>
+            
+          </div>
+
+          <div class="module-card-body">
+            <div class="module-code">FX 15</div>
+            <h4 class="module-name">動態影像網格</h4>
+            <p class="module-description">圖形或圖片組成的網格隨噪點流動，靠近游標時產生聚焦與層次。</p>
+            <ul class="module-features">
+              <li>圖形 / 圖片混排</li><li>流動速度與密度</li><li>鄰近 Hover 回饋</li>
+            </ul>
+            <div class="module-fit"><span>適合</span>創意品牌 · 展演首頁 · 作品牆</div>
+            <div class="effect-source"><a href="https://www.framer.com/community/marketplace/components/animated-grid/" target="_blank" rel="noopener noreferrer">查看原始效果 ↗</a></div>
+            <div class="module-card-foot">
+              <span>依效果與頁面數估價</span>
+              <button class="module-add" type="button" data-effect-select="animated-grid" aria-pressed="false">加入需求 ＋</button>
+            </div>
+          </div>
+        </article>
+      
+        <article class="ui-module-card effect-card" data-effect-card="scroll-helix">
+          <div class="module-preview effect-preview is-helix" data-effect-preview="helix" aria-hidden="true">
+            
+            <a class="effect-preview-link" href="/public/demos/helix/" tabindex="-1"></a>
+            
+              <div class="fx-helix-cards">
+                <img src="/public/demos/helix/assets/work-02.svg" alt="" loading="lazy">
+                <img src="/public/demos/helix/assets/work-05.svg" alt="" loading="lazy">
+                <img src="/public/demos/helix/assets/work-01.svg" alt="" loading="lazy">
+              </div>
+              <span class="fx-preview-label">SCROLL HELIX</span>
+            
+          </div>
+
+          <div class="module-card-body">
+            <div class="module-code">FX 16</div>
+            <h4 class="module-name">3D 螺旋捲動敘事</h4>
+            <p class="module-description">服務或作品卡片沿 3D 螺旋彎曲前進，捲到最後收束成整齊的格狀總覽。</p>
+            <ul class="module-features">
+              <li>Three.js 彎曲卡片幾何</li><li>捲動驅動的章節標題</li><li>手機 / 平板格狀版型</li>
+            </ul>
+            <div class="module-fit"><span>適合</span>作品集 · 品牌首頁 · 服務總覽</div>
+            <div class="effect-source"><a href="/public/demos/helix/" target="_blank" rel="noopener noreferrer">開啟完整螺旋版本 ↗</a></div>
+            <div class="module-card-foot">
+              <span>依效果與頁面數估價</span>
+              <button class="module-add" type="button" data-effect-select="scroll-helix" aria-pressed="false">加入需求 ＋</button>
+            </div>
+          </div>
+        </article>
+      
+        <article class="ui-module-card effect-card" data-effect-card="exploded-view">
+          <div class="module-preview effect-preview is-exploded" data-effect-preview="exploded" aria-hidden="true">
+            
+            <a class="effect-preview-link" href="/public/demos/exploded-burger/" tabindex="-1"></a>
+            
+              <img class="fx-exploded-art" src="/public/demos/exploded-burger/assets/poster.webp" alt="" loading="lazy">
+              <span class="fx-preview-label">EXPLODED VIEW</span>
+            
+          </div>
+
+          <div class="module-card-body">
+            <div class="module-code">FX 17</div>
+            <h4 class="module-name">產品爆炸分解</h4>
+            <p class="module-description">往下捲動，產品慢慢炸開，每個零件依序轉一圈給你看，讓結構、材質與組裝順序一眼看懂。</p>
+            <ul class="module-features">
+              <li>整頁式即時 3D</li><li>捲動拆解、逐層旋轉與重組</li><li>每層說明可客製</li>
+            </ul>
+            <div class="module-fit"><span>適合</span>設備結構 · 材質堆疊 · 模組化產品</div>
+            <div class="effect-source"><a href="/public/demos/exploded-burger/" target="_blank" rel="noopener noreferrer">開啟完整拆解版本 ↗</a></div>
+            <div class="module-card-foot">
+              <span>依效果與頁面數估價</span>
+              <button class="module-add" type="button" data-effect-select="exploded-view" aria-pressed="false">加入需求 ＋</button>
+            </div>
+          </div>
+        </article>
+      
+    </div>
+
+    <div class="module-catalog-note">
+      <span>可複選。實際使用前會再次確認原作者授權與專案範圍。</span>
+      <a href="#contact">帶著選項來聊聊 →</a>
+    </div>
+  </div>
+</section>
+
+    <section id="voices" class="split-section">
+  <div class="split-head">
+    <div class="eyebrow">04 / VOICES</div>
+    <h2 class="section-heading">客戶評價</h2>
+  </div>
+  <div class="voices-body">
+    <blockquote class="voices-lead">「規格寫得比我們自己還清楚,溝通完全不必重複解釋。」</blockquote>
+    <div class="voices-lead-author">— 陳小姐 · 牙醫診所行政主管</div>
+    <div class="voices-grid">
+      
+        <div class="voice-item">
+          <div class="voice-quote">「一個人做設計又做開發,結果比我們之前找兩家外包還一致,時程也準。」</div>
+          <div class="voice-author">林先生 · 選物品牌創辦人</div>
+        </div>
+      
+        <div class="voice-item">
+          <div class="voice-quote">「自動化上線第一週就把每週十小時的對帳工作砍掉,投報率算得出來。」</div>
+          <div class="voice-author">王小姐 · 電商營運經理</div>
+        </div>
+      
+    </div>
+  </div>
+</section>
+
+    <section id="contact" class="contact-section">
+  <div class="contact-main">
+    <div class="split-head">
+      <div class="eyebrow">05 / CONTACT</div>
+      <h2 class="contact-title">先聊三十分鐘,再決定要不要開始</h2>
+    </div>
+
+    
+
+    <form class="contact-form" method="post" action="/contact" novalidate data-contact-form>
+      
+      <div class="form-grid">
+        <div class="field ">
+          <label class="field-label" for="f-name">NAME / 姓名</label>
+          <input id="f-name" type="text" name="name" placeholder="怎麼稱呼您" maxlength="60" value="">
+          
+        </div>
+        <div class="field ">
+          <label class="field-label" for="f-email">EMAIL</label>
+          <input id="f-email" type="email" name="email" placeholder="you@example.com" value="">
+          
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label class="field-label" for="f-type">TYPE / 類型</label>
+          <select id="f-type" name="type">
+            
+              <option>形象網站</option>
+            
+              <option>系統與後台</option>
+            
+              <option>流程自動化</option>
+            
+              <option>維護與顧問</option>
+            
+              <option>其他 / 還在想</option>
+            
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label" for="f-budget">BUDGET / 預算</label>
+          <select id="f-budget" name="budget">
+            
+              <option>NT$ 5 萬以下</option>
+            
+              <option>NT$ 5–10 萬</option>
+            
+              <option>NT$ 10–30 萬</option>
+            
+              <option>NT$ 30 萬以上</option>
+            
+              <option>需要一起評估</option>
+            
+          </select>
+        </div>
+      </div>
+      <fieldset class="field module-field ">
+        <legend class="field-label">EFFECTS / 想加入的互動效果</legend>
+        <div class="module-options">
+          
+            <label class="module-option">
+              <input type="checkbox" name="effects" value="ripple-background">
+              <span><b>漣漪格點背景</b><small>FX 01</small></span>
+            </label>
+          
+            <label class="module-option">
+              <input type="checkbox" name="effects" value="hover-force">
+              <span><b>吸引／排斥懸浮互動</b><small>FX 02</small></span>
+            </label>
+          
+            <label class="module-option">
+              <input type="checkbox" name="effects" value="magnetizing-lines">
+              <span><b>磁吸線條網格</b><small>FX 03</small></span>
+            </label>
+          
+            <label class="module-option">
+              <input type="checkbox" name="effects" value="hover-chroma">
+              <span><b>流體彩度背景</b><small>FX 04</small></span>
+            </label>
+          
+            <label class="module-option">
+              <input type="checkbox" name="effects" value="xray-hover">
+              <span><b>X-Ray 掃描揭露</b><small>FX 05</small></span>
+            </label>
+          
+            <label class="module-option">
+              <input type="checkbox" name="effects" value="liquid-image">
+              <span><b>WebGL 液態圖片扭曲</b><small>FX 06</small></span>
+            </label>
+          
+            <label class="module-option">
+              <input type="checkbox" name="effects" value="liquid-distortion-reveal">
+              <span><b>WebGL 液態文字揭露</b><small>FX 07</small></span>
+            </label>
+          
+            <label class="module-option">
+              <input type="checkbox" name="effects" value="physics-text">
+              <span><b>物理感文字互動</b><small>FX 08</small></span>
+            </label>
+          
+            <label class="module-option">
+              <input type="checkbox" name="effects" value="dynamic-media-text">
+              <span><b>動態媒體文字</b><small>FX 09</small></span>
+            </label>
+          
+            <label class="module-option">
+              <input type="checkbox" name="effects" value="interactive-noise-grid">
+              <span><b>互動噪點網格</b><small>FX 10</small></span>
+            </label>
+          
+            <label class="module-option">
+              <input type="checkbox" name="effects" value="magnetic-button">
+              <span><b>磁吸行動按鈕</b><small>FX 11</small></span>
+            </label>
+          
+            <label class="module-option">
+              <input type="checkbox" name="effects" value="hover-typography">
+              <span><b>可變字體感應</b><small>FX 12</small></span>
+            </label>
+          
+            <label class="module-option">
+              <input type="checkbox" name="effects" value="interactive-pattern">
+              <span><b>互動幾何紋理</b><small>FX 13</small></span>
+            </label>
+          
+            <label class="module-option">
+              <input type="checkbox" name="effects" value="hover-text-glow">
+              <span><b>文字光暈揭露</b><small>FX 14</small></span>
+            </label>
+          
+            <label class="module-option">
+              <input type="checkbox" name="effects" value="animated-grid">
+              <span><b>動態影像網格</b><small>FX 15</small></span>
+            </label>
+          
+            <label class="module-option">
+              <input type="checkbox" name="effects" value="scroll-helix">
+              <span><b>3D 螺旋捲動敘事</b><small>FX 16</small></span>
+            </label>
+          
+            <label class="module-option">
+              <input type="checkbox" name="effects" value="exploded-view">
+              <span><b>產品爆炸分解</b><small>FX 17</small></span>
+            </label>
+          
+        </div>
+        <div class="field-help">還不確定也沒關係，會依品牌調性與網站效能一起評估。</div>
+        
+      </fieldset>
+      <div class="field ">
+        <label class="field-label" for="f-project">PROJECT / 想做什麼</label>
+        <textarea id="f-project" name="project" rows="5" placeholder="簡單描述需求、希望完成的時間,以及有沒有參考的網站或系統。"></textarea>
+        
+      </div>
+      <div class="form-submit">
+        <button type="submit" class="form-send">SEND 送出需求</button>
+        <div class="form-note">REPLY WITHIN 24 HR</div>
+      </div>
+    </form>
+  </div>
+
+  <aside class="contact-aside">
+    <div class="aside-block">
+      <div class="aside-label">DIRECT</div>
+      <div class="aside-lines">
+        <a href="mailto:hello@baize.studio">hello@baize.studio</a><br>
+        LINE · baize_studio<br>
+        MON–FRI 10:00–19:00
+      </div>
+    </div>
+    <div class="aside-block">
+      <div class="aside-label">PROCESS</div>
+      <div class="process-list">
+        
+          <div class="process-step is-first">01</div>
+          <div>三十分鐘線上訪談(免費)</div>
+        
+          <div class="process-step ">02</div>
+          <div>報價與時程表,確認後收 30% 訂金</div>
+        
+          <div class="process-step ">03</div>
+          <div>設計與開發,每週回報進度</div>
+        
+          <div class="process-step ">04</div>
+          <div>驗收上線,尾款結清並附交接文件</div>
+        
+      </div>
+    </div>
+  </aside>
+</section>
+
+  </main>
+  <footer class="footer-section">
+  <!-- 巨型字標 -->
+  <div class="wordmark" aria-hidden="true">
+    <span>B</span><span>A</span><span>I</span><span>Z</span><span>E</span>
+  </div>
+  <div class="footer-bar">
+    <a class="footer-brand" href="/">
+      
+<svg width="56" height="23" viewBox="0 0 240 100" fill="none" aria-hidden="true">
+  <!-- 貓耳(依白澤最終設計 .dc (1).html:頭頂兩角、外斜) -->
+  <path d="M 31 21 L 26 3 L 46 13" stroke="oklch(0.94 0.008 85)" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 209 21 L 214 3 L 194 13" stroke="oklch(0.94 0.008 85)" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 34 18 C 12 18 12 82 34 82" stroke="oklch(0.94 0.008 85)" stroke-width="7" stroke-linecap="round"/>
+  <path d="M 206 18 C 228 18 228 82 206 82" stroke="oklch(0.94 0.008 85)" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="92" cy="50" r="21" fill="oklch(0.62 0.14 250)"/>
+  
+  <circle cx="148" cy="50" r="21" fill="oklch(0.76 0.14 95)"/>
+  
+</svg>
+
+      <span class="footer-brand-name">白澤接案設計</span>
+    </a>
+    <div class="footer-copy">© 2026 BAIZE.STUDIO · TAIPEI</div>
+  </div>
+</footer>
+
+  
+  
+
+<script type="module" src="/public/dist/site.min.js?v=b30253cbaf10"></script>
+
+
+
+<script>
+  document.addEventListener('submit', function (event) {
+    var form = event.target.closest('[data-contact-form]');
+    if (!form) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    var data = new FormData(form);
+    var value = function (key) { return String(data.get(key) || '').trim(); };
+    var note = form.querySelector('.form-fallback-note');
+    if (!note) {
+      note = document.createElement('p');
+      note.className = 'form-fallback-note';
+      note.setAttribute('role', 'status');
+      note.style.cssText = 'margin:12px 0 0;font-size:12px;line-height:1.8;color:var(--text-mut)';
+      form.appendChild(note);
+    }
+    if (!value('name') || !value('email')) {
+      note.textContent = '請先填寫稱呼與 Email。';
+      return;
+    }
+    var lines = [
+      '稱呼：' + value('name'),
+      'Email：' + value('email'),
+      '類型：' + value('type'),
+      '預算：' + value('budget'),
+      '互動效果：' + (data.getAll('effects').join('、') || '無'),
+      '',
+      value('project'),
+    ];
+    location.href = 'mailto:hello@baize.studio?subject=' + encodeURIComponent('網站諮詢 — ' + value('name')) + '&body=' + encodeURIComponent(lines.join('\n'));
+    note.textContent = '已開啟你的郵件程式並帶入內容，寄出即可。沒有出現的話，請直接寄信到 hello@baize.studio，或加 LINE baize_studio。';
+  }, true);
+</script>
+</body>
+</html>

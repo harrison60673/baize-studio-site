@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>線上課程預約與金流平台 — 白澤接案設計</title>
+<meta name="description" content="線上課程預約與金流平台 的視覺設計介紹:設計與工程一手完成:從「冰霜」視覺語言到三端系統。。">
+<meta property="og:title" content="線上課程預約與金流平台 — 白澤接案設計">
+<meta property="og:description" content="線上課程預約與金流平台 的視覺設計介紹:設計與工程一手完成:從「冰霜」視覺語言到三端系統。。">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!--
+  中文交給系統字型，避免同一頁下載 Noto Sans / Serif TC 的數十個
+  Unicode 分片。三套輕量拉丁字型合併成一個請求。
+-->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Bitcount+Grid+Single&family=DM+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitcount+Grid+Single&family=DM+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap"></noscript>
+
+<link rel="stylesheet" href="/public/dist/site.min.css?v=b30253cbaf10">
+<link rel="stylesheet" href="/public/dist/work-detail.min.css?v=b30253cbaf10">
+
+
+
+</head>
+<body>
+  <nav class="site-nav" aria-label="主要導覽">
+  <a class="site-nav-brand" href="/" aria-label="回首頁">
+    
+<svg width="62" height="26" viewBox="0 0 240 100" fill="none" aria-hidden="true">
+  <!-- 貓耳(依白澤最終設計 .dc (1).html:頭頂兩角、外斜) -->
+  <path d="M 31 21 L 26 3 L 46 13" stroke="oklch(0.94 0.008 85)" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 209 21 L 214 3 L 194 13" stroke="oklch(0.94 0.008 85)" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 34 18 C 12 18 12 82 34 82" stroke="oklch(0.94 0.008 85)" stroke-width="7" stroke-linecap="round"/>
+  <path d="M 206 18 C 228 18 228 82 206 82" stroke="oklch(0.94 0.008 85)" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="92" cy="50" r="21" fill="oklch(0.62 0.14 250)"/>
+  
+  <circle cx="148" cy="50" r="21" fill="oklch(0.76 0.14 95)"/>
+  
+</svg>
+
+    <div class="divider"></div>
+    <div class="brand-name">白澤</div>
+  </a>
+  <div class="nav-desktop">
+    
+      <a href="/#lab">3D LAB</a>
+    
+      <a href="/#about">ABOUT</a>
+    
+      <a href="/#work">WORK</a>
+    
+      <a href="/#services">SERVICES</a>
+    
+      <a href="/#workbench">DEMO</a>
+    
+      <a href="/#voices">VOICES</a>
+    
+    <a class="nav-cta" href="/#contact">START →</a>
+  </div>
+  <details class="mobile-nav">
+    <summary>MENU</summary>
+    <div class="mobile-nav-menu">
+      
+        <a href="/#lab">3D LAB</a>
+      
+        <a href="/#about">ABOUT</a>
+      
+        <a href="/#work">WORK</a>
+      
+        <a href="/#services">SERVICES</a>
+      
+        <a href="/#workbench">DEMO</a>
+      
+        <a href="/#voices">VOICES</a>
+      
+      <a class="mobile-nav-cta" href="/#contact">START →</a>
+    </div>
+  </details>
+</nav>
+
+
+  <main class="wd">
+    <div class="wd-top">
+      <a class="wd-back" href="/#work">← 返回近期選錄</a>
+    </div>
+
+    <!-- HERO -->
+    <header class="wd-hero">
+      <div class="wd-hero-meta">
+        <span class="eyebrow">ONLINE TUTORING · 2026</span>
+        <span class="wd-role">DESIGN · FRONTEND · BACKEND</span>
+      </div>
+      <h1 class="wd-title">線上課程預約與金流平台</h1>
+      <p class="wd-tagline">設計與工程一手完成:從「冰霜」視覺語言到三端系統。</p>
+      <div class="wd-tags">
+        <span class="wd-tag">Design System</span><span class="wd-tag">React SPA</span><span class="wd-tag">Serverless</span><span class="wd-tag">多語系</span>
+      </div>
+    </header>
+
+    <!-- DESIGN 介紹 -->
+    <section class="wd-section">
+      <div class="wd-section-head">
+        <div class="eyebrow">DESIGN / 視覺設計</div>
+        <h2 class="wd-h2">冰霜 frost 設計語言</h2>
+      </div>
+      <p class="wd-lead">一個線上口說預約平台的視覺改版。把原本功能導向的介面,換成以「冰霜(frost)」為主題的清透設計語言——teal 為主色、coral 點綴,大量玻璃感卡片與襯線標題,讓線上上課的畫面也有溫度。</p>
+
+      <div class="wd-design">
+        <!-- 靜態 frost 風格 mockup(示意畫面,非實際產品) -->
+        <div class="wd-design-visual">
+          <div class="frost-frame">
+            <div class="frost-screen">
+              <div class="frost-topbar">
+                <span class="frost-brand"><span class="frost-brand-dot"></span>口說預約</span>
+                <span class="frost-topbar-menu">•••</span>
+              </div>
+              <div class="frost-hero">
+                <div class="frost-eyebrow">FROST · 線上口說</div>
+                <h3 class="frost-title">找到適合你的<br>口說老師</h3>
+                <p class="frost-sub">先免費體驗一堂,再決定要不要開始。</p>
+                <span class="frost-cta">免費體驗一堂 →</span>
+              </div>
+              <div class="frost-card">
+                <span class="frost-avatar">K</span>
+                <span class="frost-card-info">
+                  <span class="frost-card-name">K 老師 <span class="frost-chip">熱門</span></span>
+                  <span class="frost-card-focus">商務英語 · 面試</span>
+                </span>
+                <span class="frost-card-side">
+                  <span class="frost-rating">★ 4.9</span>
+                  <span class="frost-book">預約</span>
+                </span>
+              </div>
+              <div class="frost-slots">
+                <span class="frost-slot">今天 19:00</span>
+                <span class="frost-slot">明天 10:00</span>
+                <span class="frost-slot is-soft">本週剩 3 個時段</span>
+              </div>
+            </div>
+          </div>
+          <div class="wd-design-caption">示意畫面 · 假資料</div>
+        </div>
+
+        <!-- 設計重點 + 配色 + 字體 -->
+        <div class="wd-design-notes">
+          <ul class="frost-principles">
+            
+            <li>
+              <span class="frost-principle-k">清透玻璃感</span>
+              <span class="frost-principle-v">半透明卡片加背景模糊,層次輕盈不擁擠。</span>
+            </li>
+            
+            <li>
+              <span class="frost-principle-k">Teal × Coral</span>
+              <span class="frost-principle-v">冷色 teal 打底,珊瑚色只留給關鍵動作。</span>
+            </li>
+            
+            <li>
+              <span class="frost-principle-k">大圓角 · 冰霜陰影</span>
+              <span class="frost-principle-v">20px 圓角配上帶藍的柔和陰影。</span>
+            </li>
+            
+          </ul>
+
+          <div class="frost-palette">
+            
+            <div class="frost-swatch">
+              <span class="frost-chip-color" style="background: #1FA2B8;"></span>
+              <span class="frost-swatch-meta">
+                <span class="frost-swatch-name">主色 Teal</span>
+                <span class="frost-swatch-hex">#1FA2B8</span>
+              </span>
+            </div>
+            
+            <div class="frost-swatch">
+              <span class="frost-chip-color" style="background: #14707F;"></span>
+              <span class="frost-swatch-meta">
+                <span class="frost-swatch-name">深藍綠</span>
+                <span class="frost-swatch-hex">#14707F</span>
+              </span>
+            </div>
+            
+            <div class="frost-swatch">
+              <span class="frost-chip-color" style="background: #FF7E5F;"></span>
+              <span class="frost-swatch-meta">
+                <span class="frost-swatch-name">珊瑚強調</span>
+                <span class="frost-swatch-hex">#FF7E5F</span>
+              </span>
+            </div>
+            
+            <div class="frost-swatch">
+              <span class="frost-chip-color" style="background: #DDF2F5;"></span>
+              <span class="frost-swatch-meta">
+                <span class="frost-swatch-name">霧藍</span>
+                <span class="frost-swatch-hex">#DDF2F5</span>
+              </span>
+            </div>
+            
+            <div class="frost-swatch">
+              <span class="frost-chip-color" style="background: #F6FCFD;"></span>
+              <span class="frost-swatch-meta">
+                <span class="frost-swatch-name">冰底</span>
+                <span class="frost-swatch-hex">#F6FCFD</span>
+              </span>
+            </div>
+            
+            <div class="frost-swatch">
+              <span class="frost-chip-color" style="background: #0B3942;"></span>
+              <span class="frost-swatch-meta">
+                <span class="frost-swatch-name">墨黑</span>
+                <span class="frost-swatch-hex">#0B3942</span>
+              </span>
+            </div>
+            
+          </div>
+
+          <div class="frost-type">標題 襯線體 · 內文 黑體</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 技術亮點 -->
+    <section class="wd-section">
+      <div class="wd-section-head">
+        <div class="eyebrow">TECH / 技術亮點</div>
+        <h2 class="wd-h2">不只好看,也扛得住</h2>
+      </div>
+      <div class="wd-caps">
+        
+        <div class="wd-cap">
+          <div class="wd-cap-k">三端單頁應用</div>
+          <div class="wd-cap-v">學生、老師、運營共用一套 React SPA,依角色動態切換介面與權限。</div>
+        </div>
+        
+        <div class="wd-cap">
+          <div class="wd-cap-k">即時資料同步</div>
+          <div class="wd-cap-v">預約、堂數、名額變動即時反映到各端,免重整。</div>
+        </div>
+        
+        <div class="wd-cap">
+          <div class="wd-cap-k">權限與資安</div>
+          <div class="wd-cap-v">資料庫層 Security Rules 控管讀寫,規則有自動化測試守護。</div>
+        </div>
+        
+        <div class="wd-cap">
+          <div class="wd-cap-k">金流 × 加密貨幣</div>
+          <div class="wd-cap-v">串接第三方金流,付款完成自動對應堂數;另支援加密貨幣收款。</div>
+        </div>
+        
+        <div class="wd-cap">
+          <div class="wd-cap-k">Serverless 後端</div>
+          <div class="wd-cap-v">無伺服器函式處理金流回呼、通知信與視訊連結產生。</div>
+        </div>
+        
+        <div class="wd-cap">
+          <div class="wd-cap-k">原子化批次預約</div>
+          <div class="wd-cap-v">一次預約多個時段仍保證不重複、不超賣(交易式寫入)。</div>
+        </div>
+        
+        <div class="wd-cap">
+          <div class="wd-cap-k">多語系 · 時區</div>
+          <div class="wd-cap-v">六國語言一份字典覆蓋全站,語言與時區跟著帳號走。</div>
+        </div>
+        
+        <div class="wd-cap">
+          <div class="wd-cap-k">SEO 靜態快照</div>
+          <div class="wd-cap-v">建置時產生 SEO 快照,SPA 也能被搜尋引擎完整收錄。</div>
+        </div>
+        
+      </div>
+    </section>
+
+    <!-- 系統架構 -->
+    <section class="wd-section">
+      <div class="wd-section-head">
+        <div class="eyebrow">ARCHITECTURE / 系統架構</div>
+        <h2 class="wd-h2">三端共用一套系統</h2>
+      </div>
+      <div class="wd-arch">
+        <div class="wd-arch-roles">
+          
+          <div class="wd-role-chip">
+            <div class="wd-role-name">學生</div>
+            <div class="wd-role-desc">預約 · 購買堂數 · 我的堂數 · 評價</div>
+          </div>
+          
+          <div class="wd-role-chip">
+            <div class="wd-role-name">老師</div>
+            <div class="wd-role-desc">課表 · 預約管理 · 學員 · 上課摘要</div>
+          </div>
+          
+          <div class="wd-role-chip">
+            <div class="wd-role-name">運營</div>
+            <div class="wd-role-desc">營運總覽 · 會員管理 · 交易明細</div>
+          </div>
+          
+        </div>
+        <div class="wd-arch-flow" aria-hidden="true">↓</div>
+        <div class="wd-arch-stack">
+          
+          <div class="wd-arch-layer">
+            <div class="wd-arch-head">
+              <span class="wd-arch-tag">CLIENT</span>
+              <span class="wd-arch-name">前端</span>
+            </div>
+            <div class="wd-arch-items">
+              <span class="wd-arch-item">React SPA</span><span class="wd-arch-item">角色路由</span><span class="wd-arch-item">6 語 i18n</span>
+            </div>
+          </div>
+          
+          <div class="wd-arch-layer">
+            <div class="wd-arch-head">
+              <span class="wd-arch-tag">DATA</span>
+              <span class="wd-arch-name">資料</span>
+            </div>
+            <div class="wd-arch-items">
+              <span class="wd-arch-item">即時資料庫</span><span class="wd-arch-item">Auth 會員</span><span class="wd-arch-item">Security Rules</span>
+            </div>
+          </div>
+          
+          <div class="wd-arch-layer">
+            <div class="wd-arch-head">
+              <span class="wd-arch-tag">SERVERLESS</span>
+              <span class="wd-arch-name">服務</span>
+            </div>
+            <div class="wd-arch-items">
+              <span class="wd-arch-item">金流回呼</span><span class="wd-arch-item">通知信</span><span class="wd-arch-item">視訊連結</span><span class="wd-arch-item">加密貨幣</span>
+            </div>
+          </div>
+          
+          <div class="wd-arch-layer">
+            <div class="wd-arch-head">
+              <span class="wd-arch-tag">DELIVERY</span>
+              <span class="wd-arch-name">交付</span>
+            </div>
+            <div class="wd-arch-items">
+              <span class="wd-arch-item">Git 自動部署</span><span class="wd-arch-item">SEO 快照</span><span class="wd-arch-item">自動化測試</span>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="wd-cta">
+      <div class="wd-cta-title">想要一套自己的設計語言?</div>
+      <p class="wd-cta-text">從配色、字體到元件,幫你把品牌收斂成一套能長期沿用的系統。</p>
+      <div class="wd-cta-actions">
+        <a class="btn btn-solid" href="/#contact">免費諮詢 30 MIN</a>
+        <a class="btn btn-outline" href="/#work">看其他作品</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer-section">
+  <!-- 巨型字標 -->
+  <div class="wordmark" aria-hidden="true">
+    <span>B</span><span>A</span><span>I</span><span>Z</span><span>E</span>
+  </div>
+  <div class="footer-bar">
+    <a class="footer-brand" href="/">
+      
+<svg width="56" height="23" viewBox="0 0 240 100" fill="none" aria-hidden="true">
+  <!-- 貓耳(依白澤最終設計 .dc (1).html:頭頂兩角、外斜) -->
+  <path d="M 31 21 L 26 3 L 46 13" stroke="oklch(0.94 0.008 85)" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 209 21 L 214 3 L 194 13" stroke="oklch(0.94 0.008 85)" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 34 18 C 12 18 12 82 34 82" stroke="oklch(0.94 0.008 85)" stroke-width="7" stroke-linecap="round"/>
+  <path d="M 206 18 C 228 18 228 82 206 82" stroke="oklch(0.94 0.008 85)" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="92" cy="50" r="21" fill="oklch(0.62 0.14 250)"/>
+  
+  <circle cx="148" cy="50" r="21" fill="oklch(0.76 0.14 95)"/>
+  
+</svg>
+
+      <span class="footer-brand-name">白澤接案設計</span>
+    </a>
+    <div class="footer-copy">© 2026 BAIZE.STUDIO · TAIPEI</div>
+  </div>
+</footer>
+
+  
+  
+  
+
+<script type="module" src="/public/dist/site.min.js?v=b30253cbaf10"></script>
+
+
+</body>
+</html>

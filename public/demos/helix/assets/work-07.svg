@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+<rect width="1200" height="800" fill="#F2ECE2"/>
+<rect x="48" y="48" width="1104" height="704" rx="10" fill="none" stroke="#0f0e0c" stroke-opacity=".16"/>
+<text x="92" y="118" font-family="Menlo,Consolas,'IBM Plex Mono',monospace" font-size="24" letter-spacing="3" fill="#8a7714">AESTHETIC / 07</text>
+<g transform="translate(994 82) scale(0.46)" fill="none" stroke="#0f0e0c" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M31 21L26 3L46 13"/><path d="M209 21L214 3L194 13"/><path d="M34 18C12 18 12 82 34 82"/><path d="M206 18C228 18 228 82 206 82"/><circle cx="92" cy="50" r="21" fill="#3f87d6" stroke="none"/><circle cx="92" cy="50" r="7" fill="#191714" stroke="none"/><circle cx="148" cy="50" r="21" fill="#c9b13a" stroke="none"/><ellipse cx="148" cy="50" rx="3.4" ry="12" fill="#191714" stroke="none"/></g>
+<rect x="92" y="170" width="480" height="360" fill="#c9b13a"/><circle cx="332" cy="350" r="112" fill="#F2ECE2"/><rect x="618" y="170" width="230" height="170" fill="#0f0e0c" opacity=".88"/><rect x="878" y="170" width="230" height="170" fill="none" stroke="#0f0e0c" stroke-opacity=".5" stroke-width="2"/><rect x="618" y="378" width="490" height="20" fill="#0f0e0c" opacity=".72"/><rect x="618" y="420" width="370" height="12" fill="#0f0e0c" opacity=".3"/><rect x="618" y="450" width="420" height="12" fill="#0f0e0c" opacity=".3"/>
+<text x="92" y="620" font-family="'PingFang TC','Noto Sans TC','Microsoft JhengHei',Arial,sans-serif" font-size="74" font-weight="600" fill="#0f0e0c">選物品牌形象網站</text>
+<text x="92" y="690" font-family="Menlo,Consolas,'IBM Plex Mono',monospace" font-size="25" letter-spacing="3" fill="#0f0e0c" fill-opacity=".66">LIFESTYLE RETAIL · 2025</text>
+</svg>

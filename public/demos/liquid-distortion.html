@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Liquid Distortion — vanilla WebGL</title>
+<script>
+  if (new URLSearchParams(window.location.search).has('embed')) {
+    document.documentElement.classList.add('is-embed');
+  }
+</script>
+<style>
+  :root {
+    --bg: #05070d;
+    --fg: #e8ecf4;
+    --dim: #7c88a0;
+    --line: rgba(255,255,255,.14);
+    --panel: rgba(10,14,22,.72);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%;
+    background: var(--bg); color: var(--fg);
+    font: 13px/1.5 -apple-system, "SF Pro Text", "Helvetica Neue", "PingFang TC", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+
+  #stage {
+    position: absolute; inset: 0;
+    overflow: visible;                 /* 讓 canvas 的 overscan 可以露出來 */
+    touch-action: none;
+  }
+  /* 關鍵:canvas 比容器大 20%,四邊各溢出 10%,
+     扭曲把像素推到邊緣時才不會露出空白 */
+  #gl {
+    position: absolute;
+    top: -10%; left: -10%;
+    width: 120%; height: 120%;
+    display: block;
+  }
+
+  #caption {
+    position: absolute; left: 28px; bottom: 24px;
+    pointer-events: none; z-index: 2;
+  }
+  #title {
+    font-size: clamp(28px, 7vw, 76px);
+    font-weight: 700; letter-spacing: -.03em; line-height: .95;
+    margin: 0; padding-left: 2px;
+    text-shadow: 0 2px 30px rgba(0,0,0,.5);
+  }
+  #hint {
+    color: var(--dim); font-size: 12px; letter-spacing: .04em;
+    margin: 0 0 6px; padding-left: 3px;
+    text-shadow: 0 1px 12px rgba(0,0,0,.8);
+  }
+
+  #panel {
+    position: absolute; top: 16px; right: 16px; z-index: 3;
+    width: 232px; padding: 14px 16px 16px;
+    background: var(--panel); backdrop-filter: blur(14px);
+    border: 1px solid var(--line); border-radius: 12px;
+  }
+  #panel h2 {
+    margin: 0 0 12px; font-size: 11px; font-weight: 600;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--dim);
+  }
+  .row { margin-bottom: 11px; }
+  .row label {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 11.5px; color: var(--dim); margin-bottom: 5px;
+  }
+  .row label b { color: var(--fg); font-weight: 500; font-variant-numeric: tabular-nums; }
+  input[type=range] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 3px; border-radius: 2px;
+    background: rgba(255,255,255,.16); outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 13px; height: 13px; border-radius: 50%;
+    background: var(--fg); cursor: pointer;
+  }
+  .btnrow { display: flex; gap: 8px; margin-top: 14px; }
+  button {
+    flex: 1; padding: 7px 8px; font: inherit; font-size: 11.5px;
+    color: var(--fg); background: rgba(255,255,255,.07);
+    border: 1px solid var(--line); border-radius: 7px; cursor: pointer;
+  }
+  button:hover { background: rgba(255,255,255,.13); }
+  .check {
+    display: flex; align-items: center; gap: 7px;
+    margin-top: 12px; font-size: 11.5px; color: var(--dim); cursor: pointer;
+  }
+  .check input { accent-color: #6ea8ff; }
+
+  #drop {
+    position: absolute; inset: 0; z-index: 4;
+    display: none; place-items: center;
+    background: rgba(5,7,13,.82); backdrop-filter: blur(3px);
+    border: 2px dashed rgba(255,255,255,.35);
+    font-size: 15px; letter-spacing: .05em;
+  }
+  #drop.on { display: grid; }
+
+  #err {
+    position: absolute; inset: 0; z-index: 9;
+    display: none; place-items: center; padding: 40px;
+    text-align: center; color: #ff9a9a; background: var(--bg);
+  }
+  .is-embed #caption,
+  .is-embed #panel,
+  .is-embed #drop { display: none !important; }
+  .is-embed #stage { cursor: crosshair; }
+  html.is-preview-paused *,
+  html.is-preview-paused *::before,
+  html.is-preview-paused *::after { animation-play-state: paused !important; }
+  @media (max-width: 720px) {
+    #panel { top: auto; bottom: 12px; right: 12px; left: 12px; width: auto; }
+    #caption { bottom: 300px; left: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <canvas id="gl"></canvas>
+</div>
+
+<div id="caption">
+  <div id="hint">移動滑鼠攪動 · 拖曳圖片進來換圖</div>
+  <h1 id="title">LIQUID<br>DISTORTION</h1>
+</div>
+
+<div id="panel">
+  <h2>Parameters</h2>
+  <div class="row">
+    <label>模擬解析度 <b id="v-res">4</b></label>
+    <input type="range" id="res" min="1" max="10" step="1" value="4">
+  </div>
+  <div class="row">
+    <label>筆刷大小 <b id="v-size">0.5</b></label>
+    <input type="range" id="size" min="0.1" max="1" step="0.05" value="0.5">
+  </div>
+  <div class="row">
+    <label>擾動力道 <b id="v-power">0.6</b></label>
+    <input type="range" id="power" min="0.1" max="1" step="0.05" value="0.6">
+  </div>
+  <div class="row">
+    <label>扭曲強度 <b id="v-dist">0.40</b></label>
+    <input type="range" id="dist" min="0.1" max="1" step="0.05" value="0.4">
+  </div>
+  <div class="btnrow">
+    <button id="pick">選擇圖片</button>
+    <button id="reset">重設</button>
+  </div>
+  <label class="check"><input type="checkbox" id="auto"> 自動漂流(無滑鼠時)</label>
+  <input type="file" id="file" accept="image/*" hidden>
+</div>
+
+<div id="drop">放開以載入圖片</div>
+<div id="err"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  const stage  = document.getElementById('stage');
+  const canvas = document.getElementById('gl');
+  const errBox = document.getElementById('err');
+  const embed = document.documentElement.classList.contains('is-embed');
+
+  const fail = (msg) => { errBox.textContent = msg; errBox.style.display = 'grid'; };
+
+  const gl = canvas.getContext('webgl', {
+    alpha: true, antialias: false, depth: false, stencil: false,
+    premultipliedAlpha: true, preserveDrawingBuffer: false
+  });
+  if (!gl) { fail('這個瀏覽器沒有可用的 WebGL。'); return; }
+
+  /* ------------------------------------------------------------------ *
+   *  浮點貼圖:速度場 / 染料場都需要能 render-to-texture 的浮點格式。
+   *  桌機通常有 OES_texture_float,行動裝置多半只有 half-float。
+   * ------------------------------------------------------------------ */
+  gl.getExtension('OES_texture_float');
+  gl.getExtension('OES_texture_float_linear');
+  const extHalf = gl.getExtension('OES_texture_half_float');
+  gl.getExtension('OES_texture_half_float_linear');
+
+  function renderable(type) {
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 4, 4, 0, gl.RGBA, type, null);
+    const fbo = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+    const ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.deleteFramebuffer(fbo); gl.deleteTexture(tex);
+    return ok;
+  }
+
+  let TEX_TYPE = null;
+  if (renderable(gl.FLOAT)) TEX_TYPE = gl.FLOAT;
+  else if (extHalf && renderable(extHalf.HALF_FLOAT_OES)) TEX_TYPE = extHalf.HALF_FLOAT_OES;
+  if (TEX_TYPE === null) { fail('這台裝置不支援可渲染的浮點貼圖,無法跑流體模擬。'); return; }
+
+  gl.clearColor(0, 0, 0, 0);
+
+  /* ------------------------------------------------------------------ *
+   *  Shaders
+   * ------------------------------------------------------------------ */
+
+  // 共用頂點著色器:順便算好上下左右鄰居的 UV,片段著色器就不必再做加減。
+  const VERT = `
+precision highp float;
+attribute vec2 a_position;
+uniform vec2 u_texel;
+varying vec2 vUv, vL, vR, vT, vB;
+void main () {
+  vUv = .5 * (a_position + 1.);
+  vL = vUv - vec2(u_texel.x, 0.);
+  vR = vUv + vec2(u_texel.x, 0.);
+  vT = vUv + vec2(0., u_texel.y);
+  vB = vUv - vec2(0., u_texel.y);
+  gl_Position = vec4(a_position, 0., 1.);
+}`;
+
+  // 1) Splat:把滑鼠速度以高斯核注入場中
+  const F_SPLAT = `
+precision highp float;
+varying vec2 vUv;
+uniform sampler2D u_input_texture;
+uniform float u_ratio;
+uniform vec3 u_point_value;
+uniform vec2 u_point;
+uniform float u_point_size;
+void main () {
+  vec2 p = vUv - u_point.xy;
+  p.x *= u_ratio;
+  vec3 splat = .6 * pow(2., -dot(p, p) / u_point_size) * u_point_value;
+  vec3 base = texture2D(u_input_texture, vUv).xyz;
+  gl_FragColor = vec4(base + splat, 1.);
+}`;
+
+  // 2) Divergence:速度場的散度(中央差分)
+  const F_DIV = `
+precision highp float;
+varying vec2 vUv, vL, vR, vT, vB;
+uniform sampler2D u_velocity_texture;
+void main () {
+  float L = texture2D(u_velocity_texture, vL).x;
+  float R = texture2D(u_velocity_texture, vR).x;
+  float T = texture2D(u_velocity_texture, vT).y;
+  float B = texture2D(u_velocity_texture, vB).y;
+  gl_FragColor = vec4(.25 * (R - L + T - B), 0., 0., 1.);
+}`;
+
+  // 3) Pressure:Jacobi 迭代解 Poisson 方程
+  const F_PRESSURE = `
+precision highp float;
+varying vec2 vUv, vL, vR, vT, vB;
+uniform sampler2D u_pressure_texture;
+uniform sampler2D u_divergence_texture;
+void main () {
+  float L = texture2D(u_pressure_texture, vL).x;
+  float R = texture2D(u_pressure_texture, vR).x;
+  float T = texture2D(u_pressure_texture, vT).x;
+  float B = texture2D(u_pressure_texture, vB).x;
+  float divergence = texture2D(u_divergence_texture, vUv).x;
+  gl_FragColor = vec4((L + R + B + T - divergence) * .25, 0., 0., 1.);
+}`;
+
+  // 4) Gradient subtract:扣掉壓力梯度 → 無散度場。「看起來像水」就是這步。
+  const F_GRAD = `
+precision highp float;
+varying vec2 vUv, vL, vR, vT, vB;
+uniform sampler2D u_pressure_texture;
+uniform sampler2D u_velocity_texture;
+void main () {
+  float L = texture2D(u_pressure_texture, vL).x;
+  float R = texture2D(u_pressure_texture, vR).x;
+  float T = texture2D(u_pressure_texture, vT).x;
+  float B = texture2D(u_pressure_texture, vB).x;
+  vec2 velocity = texture2D(u_velocity_texture, vUv).xy;
+  velocity -= vec2(R - L, T - B);
+  gl_FragColor = vec4(velocity, 0., 1.);
+}`;
+
+  // 5) Advection:半拉格朗日回溯 + 雙線性取樣
+  const F_ADVECT = `
+precision highp float;
+varying vec2 vUv;
+uniform sampler2D u_velocity_texture;
+uniform sampler2D u_input_texture;
+uniform vec2 u_texel;
+uniform vec2 u_output_texel;
+uniform float u_dt;
+uniform float u_dissipation;
+
+vec4 bilerp (sampler2D sam, vec2 uv, vec2 tsize) {
+  vec2 st = uv / tsize - .5;
+  vec2 iuv = floor(st);
+  vec2 fuv = fract(st);
+  vec4 a = texture2D(sam, (iuv + vec2(0.5, 0.5)) * tsize);
+  vec4 b = texture2D(sam, (iuv + vec2(1.5, 0.5)) * tsize);
+  vec4 c = texture2D(sam, (iuv + vec2(0.5, 1.5)) * tsize);
+  vec4 d = texture2D(sam, (iuv + vec2(1.5, 1.5)) * tsize);
+  return mix(mix(a, b, fuv.x), mix(c, d, fuv.x), fuv.y);
+}
+
+void main () {
+  vec2 coord = vUv - u_dt * bilerp(u_velocity_texture, vUv, u_texel).xy * u_texel;
+  gl_FragColor = u_dissipation * bilerp(u_input_texture, coord, u_output_texel);
+}`;
+
+  // 6) Display:圖片本身完全靜止,動的只是「從哪裡取像素」
+  const F_DISPLAY = `
+precision highp float;
+varying vec2 vUv;
+uniform float u_ratio;         // 容器寬高比
+uniform float u_img_ratio;     // 圖片寬高比
+uniform float u_disturb_power;
+uniform float u_inner_scale;   // 容器佔 canvas 的比例(overscan 的倒數)
+uniform sampler2D u_output_texture;    // 染料場 = 擾動強度
+uniform sampler2D u_velocity_texture;  // 速度場 = 擾動方向
+uniform sampler2D u_image_texture;
+
+// canvas UV → 圖片 UV,含 object-fit: cover 的裁切
+vec2 get_img_uv() {
+  vec2 uv = (vUv - .5) / u_inner_scale;
+  vec2 scale = vec2(1.);
+  if (u_ratio > u_img_ratio) scale.y = u_img_ratio / u_ratio;
+  else                       scale.x = u_ratio / u_img_ratio;
+  return uv * scale + .5;
+}
+
+// 內框 UV:用來算邊緣的 alpha,讓漣漪能把圖片邊界本身推得波動
+vec2 get_frame_uv() {
+  return (vUv - .5) / u_inner_scale + .5;
+}
+
+float frame_alpha(vec2 uv, float w) {
+  float a = smoothstep(0., w, uv.x) * smoothstep(1., 1. - w, uv.x);
+  a *= smoothstep(0., w, uv.y) * smoothstep(1., 1. - w, uv.y);
+  return a;
+}
+
+// 取樣超出 [0,1] 時改用 3x3 小模糊,避免 CLAMP_TO_EDGE 的邊緣像素拉出條紋
+vec3 sample_image_smooth(vec2 uv) {
+  vec2 uvc = clamp(uv, 0., 1.);
+  vec3 base = texture2D(u_image_texture, vec2(uvc.x, 1. - uvc.y)).rgb;
+  float outside = max(max(step(uv.y, 0.), step(1., uv.y)),
+                      max(step(uv.x, 0.), step(1., uv.x)));
+  if (outside > 0.) {
+    float d = .002;
+    vec3 sum = vec3(0.);
+    for (int i = -1; i <= 1; i++) {
+      for (int j = -1; j <= 1; j++) {
+        vec2 s = clamp(uvc + vec2(float(i), float(j)) * d, 0., 1.);
+        sum += texture2D(u_image_texture, vec2(s.x, 1. - s.y)).rgb;
+      }
+    }
+    base = sum / 9.;
+  }
+  return base;
+}
+
+void main () {
+  float offset = texture2D(u_output_texture, vUv).r;
+  vec2 velocity = texture2D(u_velocity_texture, vUv).xy + .001; // 避免 normalize(0)
+  vec2 push = 2. * u_disturb_power * normalize(velocity) * offset;
+
+  vec3 img = sample_image_smooth(get_img_uv() - push);
+  float opacity = frame_alpha(get_frame_uv() - push, .002);
+  gl_FragColor = vec4(img * opacity, opacity);   // premultiplied alpha
+}`;
+
+  /* ------------------------------------------------------------------ *
+   *  WebGL 樣板
+   * ------------------------------------------------------------------ */
+  function compile(src, type) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS))
+      throw new Error(gl.getShaderInfoLog(s) || 'shader compile error');
+    return s;
+  }
+
+  function program(vsrc, fsrc) {
+    const p = gl.createProgram();
+    gl.attachShader(p, compile(vsrc, gl.VERTEX_SHADER));
+    gl.attachShader(p, compile(fsrc, gl.FRAGMENT_SHADER));
+    gl.bindAttribLocation(p, 0, 'a_position');
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS))
+      throw new Error(gl.getProgramInfoLog(p) || 'program link error');
+    const uniforms = {};
+    const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+    for (let i = 0; i < n; i++) {
+      const info = gl.getActiveUniform(p, i);
+      if (info) uniforms[info.name] = gl.getUniformLocation(p, info.name);
+    }
+    return { program: p, uniforms };
+  }
+
+  // 全螢幕四邊形,建立一次就好
+  {
+    const vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, -1,1, 1,1, 1,-1]), gl.STATIC_DRAW);
+    const ibo = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([0,1,2, 0,2,3]), gl.STATIC_DRAW);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(0);
+  }
+
+  function blit(target) {
+    if (target == null) {
+      gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    } else {
+      gl.viewport(0, 0, target.width, target.height);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, target.fbo);
+    }
+    gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+  }
+
+  function createFBO(w, h) {
+    gl.activeTexture(gl.TEXTURE0);
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, TEX_TYPE, null);
+
+    const fbo = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+    gl.viewport(0, 0, w, h);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    return { fbo, tex, width: w, height: h,
+             attach(unit) { gl.activeTexture(gl.TEXTURE0 + unit);
+                            gl.bindTexture(gl.TEXTURE_2D, tex); return unit; } };
+  }
+
+  function createDoubleFBO(w, h) {
+    let a = createFBO(w, h), b = createFBO(w, h);
+    return { width: w, height: h, texelX: 1 / w, texelY: 1 / h,
+             read: () => a, write: () => b, swap() { const t = a; a = b; b = t; },
+             dispose() { [a, b].forEach(f => { gl.deleteFramebuffer(f.fbo); gl.deleteTexture(f.tex); }); } };
+  }
+
+  const P_SPLAT    = program(VERT, F_SPLAT);
+  const P_DIV      = program(VERT, F_DIV);
+  const P_PRESSURE = program(VERT, F_PRESSURE);
+  const P_GRAD     = program(VERT, F_GRAD);
+  const P_ADVECT   = program(VERT, F_ADVECT);
+  const P_DISPLAY  = program(VERT, F_DISPLAY);
+
+  /* ------------------------------------------------------------------ *
+   *  狀態
+   * ------------------------------------------------------------------ */
+  const OVERSCAN = 1.2;                 // canvas 比容器大的倍率
+  const INNER    = 1 / OVERSCAN;        // 容器在 canvas 中佔的比例
+  const PRESSURE_ITERATIONS = 16;
+
+  const params = { resolution: 4, cursorSize: 0.5, cursorPower: 0.6, distortion: 0.4, auto: embed };
+
+  const pointer = { x: 0, y: 0, dx: 0, dy: 0, moved: false };
+  let hovering = false;
+  let sim = { w: 0, h: 0 };
+  let velocity, dye, divergence, pressure;
+  let imageTex = null, imageRatio = 1;
+  let raf = 0;
+  let previewActive = !embed;
+
+  function shouldRun() {
+    return previewActive && !document.hidden;
+  }
+
+  function stopLoop() {
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+  }
+
+  function startLoop() {
+    if (!raf && shouldRun()) raf = requestAnimationFrame(frame);
+  }
+
+  function setPreviewActive(active) {
+    previewActive = Boolean(active);
+    document.documentElement.classList.toggle('is-preview-paused', !previewActive);
+    if (shouldRun()) startLoop();
+    else stopLoop();
+  }
+
+  window.addEventListener('message', event => {
+    const data = event.data;
+    if (event.source !== parent || !data || data.type !== 'baize:preview-active') return;
+    setPreviewActive(data.active);
+  });
+
+  function resize() {
+    const cw = stage.clientWidth, ch = stage.clientHeight;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width  = Math.max(2, Math.round(cw * OVERSCAN * dpr));
+    canvas.height = Math.max(2, Math.round(ch * OVERSCAN * dpr));
+
+    // 模擬網格刻意做得很小 —— 顯示是幾百萬像素,物理只算幾萬格
+    const base = 128 + (params.resolution - 1) * 384 / 9;
+    const aspect = (cw * OVERSCAN) / Math.max(1, ch * OVERSCAN);
+    sim.w = Math.max(2, Math.round(base * aspect));
+    sim.h = Math.max(2, Math.round(base));
+  }
+
+  function allocate() {
+    [velocity, dye, pressure].forEach(f => f && f.dispose && f.dispose());
+    if (divergence) { gl.deleteFramebuffer(divergence.fbo); gl.deleteTexture(divergence.tex); }
+    velocity   = createDoubleFBO(sim.w, sim.h);
+    dye        = createDoubleFBO(sim.w, sim.h);
+    pressure   = createDoubleFBO(sim.w, sim.h);
+    divergence = createFBO(sim.w, sim.h);
+  }
+
+  // 指標座標(相對容器)→ canvas 的 UV,要把 overscan 的偏移補回去
+  function pointerUV() {
+    const cw = stage.clientWidth, ch = stage.clientHeight;
+    const w = cw * OVERSCAN, h = ch * OVERSCAN;
+    const ox = .5 * (w - cw), oy = .5 * (h - ch);
+    return { u: (pointer.x + ox) / w, v: 1 - (pointer.y + oy) / h };
+  }
+
+  function movePointer(x, y) {
+    pointer.dx = 6 * (x - pointer.x);
+    pointer.dy = 6 * (y - pointer.y);
+    pointer.x = x; pointer.y = y;
+    pointer.moved = true;
+  }
+
+  /* ------------------------------------------------------------------ *
+   *  每幀模擬
+   * ------------------------------------------------------------------ */
+  function frame() {
+    if (!shouldRun()) { raf = 0; return; }
+    const dt = 1 / 60;
+    const ratio = stage.clientWidth / Math.max(1, stage.clientHeight);
+
+    if (params.auto && !hovering) {
+      // 沒有滑鼠時,讓一個看不見的指標畫利薩茹曲線,場才不會靜止
+      const t = performance.now() / 1000;
+      movePointer(
+        stage.clientWidth  * (.5 + .34 * Math.sin(t * .61)),
+        stage.clientHeight * (.5 + .30 * Math.sin(t * .43 + 1.2))
+      );
+    }
+
+    // ── 1) Splat:注入速度 + 染料 ────────────────────────────────
+    if (pointer.moved) {
+      pointer.moved = false;
+      const p = pointerUV();
+      gl.useProgram(P_SPLAT.program);
+      gl.uniform1f(P_SPLAT.uniforms.u_ratio, ratio);
+      gl.uniform2f(P_SPLAT.uniforms.u_point, p.u, p.v);
+      gl.uniform1f(P_SPLAT.uniforms.u_point_size,
+                   (0.5 + (params.cursorSize - .1) * 4.5 / .9) * 0.001);
+
+      gl.uniform1i(P_SPLAT.uniforms.u_input_texture, velocity.read().attach(1));
+      gl.uniform3f(P_SPLAT.uniforms.u_point_value, pointer.dx, -pointer.dy, 0);
+      blit(velocity.write()); velocity.swap();
+
+      gl.uniform1i(P_SPLAT.uniforms.u_input_texture, dye.read().attach(1));
+      gl.uniform3f(P_SPLAT.uniforms.u_point_value,
+                   (5 + (params.cursorPower - .1) * 45 / .9) * 0.001, 0, 0);
+      blit(dye.write()); dye.swap();
+    }
+
+    // ── 2) Divergence ──────────────────────────────────────────
+    gl.useProgram(P_DIV.program);
+    gl.uniform2f(P_DIV.uniforms.u_texel, velocity.texelX, velocity.texelY);
+    gl.uniform1i(P_DIV.uniforms.u_velocity_texture, velocity.read().attach(1));
+    blit(divergence);
+
+    // ── 3) Pressure:Jacobi × 16 ───────────────────────────────
+    gl.useProgram(P_PRESSURE.program);
+    gl.uniform2f(P_PRESSURE.uniforms.u_texel, velocity.texelX, velocity.texelY);
+    gl.uniform1i(P_PRESSURE.uniforms.u_divergence_texture, divergence.attach(1));
+    for (let i = 0; i < PRESSURE_ITERATIONS; i++) {
+      gl.uniform1i(P_PRESSURE.uniforms.u_pressure_texture, pressure.read().attach(2));
+      blit(pressure.write()); pressure.swap();
+    }
+
+    // ── 4) Gradient subtract ───────────────────────────────────
+    gl.useProgram(P_GRAD.program);
+    gl.uniform2f(P_GRAD.uniforms.u_texel, velocity.texelX, velocity.texelY);
+    gl.uniform1i(P_GRAD.uniforms.u_pressure_texture, pressure.read().attach(1));
+    gl.uniform1i(P_GRAD.uniforms.u_velocity_texture, velocity.read().attach(2));
+    blit(velocity.write()); velocity.swap();
+
+    // ── 5) Advection:速度自我平流,染料走得更遠、消散更慢 ────────
+    gl.useProgram(P_ADVECT.program);
+    gl.uniform2f(P_ADVECT.uniforms.u_texel, velocity.texelX, velocity.texelY);
+    gl.uniform2f(P_ADVECT.uniforms.u_output_texel, velocity.texelX, velocity.texelY);
+    gl.uniform1f(P_ADVECT.uniforms.u_dt, dt);
+    gl.uniform1f(P_ADVECT.uniforms.u_dissipation, 0.97);
+    gl.uniform1i(P_ADVECT.uniforms.u_velocity_texture, velocity.read().attach(1));
+    gl.uniform1i(P_ADVECT.uniforms.u_input_texture, velocity.read().attach(1));
+    blit(velocity.write()); velocity.swap();
+
+    gl.uniform1i(P_ADVECT.uniforms.u_velocity_texture, velocity.read().attach(1));
+    gl.uniform2f(P_ADVECT.uniforms.u_output_texel, dye.texelX, dye.texelY);
+    gl.uniform1i(P_ADVECT.uniforms.u_input_texture, dye.read().attach(2));
+    gl.uniform1f(P_ADVECT.uniforms.u_dt, dt * 8);
+    gl.uniform1f(P_ADVECT.uniforms.u_dissipation, 0.98);
+    blit(dye.write()); dye.swap();
+
+    // ── 6) Display ─────────────────────────────────────────────
+    if (imageTex) {
+      gl.useProgram(P_DISPLAY.program);
+      gl.uniform2f(P_DISPLAY.uniforms.u_texel, velocity.texelX, velocity.texelY);
+      gl.uniform1f(P_DISPLAY.uniforms.u_ratio, ratio);
+      gl.uniform1f(P_DISPLAY.uniforms.u_img_ratio, imageRatio);
+      gl.uniform1f(P_DISPLAY.uniforms.u_disturb_power, params.distortion);
+      gl.uniform1f(P_DISPLAY.uniforms.u_inner_scale, INNER);
+      gl.uniform1i(P_DISPLAY.uniforms.u_velocity_texture, velocity.read().attach(1));
+      gl.uniform1i(P_DISPLAY.uniforms.u_output_texture, dye.read().attach(2));
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, imageTex);
+      gl.uniform1i(P_DISPLAY.uniforms.u_image_texture, 0);
+      blit(null);
+    }
+
+    raf = requestAnimationFrame(frame);
+  }
+
+  /* ------------------------------------------------------------------ *
+   *  圖片
+   * ------------------------------------------------------------------ */
+  function uploadImage(source, w, h) {
+    imageRatio = w / Math.max(1, h);
+    if (!imageTex) imageTex = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, imageTex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
+  }
+
+  function loadImageFromURL(url, revoke) {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      uploadImage(img, img.naturalWidth, img.naturalHeight);
+      if (revoke) URL.revokeObjectURL(url);
+    };
+    img.onerror = () => { if (revoke) URL.revokeObjectURL(url); };
+    img.src = url;
+  }
+
+  // 內建預設圖:程序式產生,所以離線 / file:// 開啟都不會有 CORS 或缺圖問題
+  function defaultImage() {
+    const W = 1600, H = 1000;
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const x = c.getContext('2d');
+
+    const bg = x.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0, '#02040c');
+    bg.addColorStop(.55, '#071a3d');
+    bg.addColorStop(1, '#010208');
+    x.fillStyle = bg; x.fillRect(0, 0, W, H);
+
+    // 幾團發光的水母狀色塊 —— 高對比才看得出扭曲
+    const blobs = [
+      [430, 330, 300, '#3aa0ff'], [1180, 260, 250, '#1e6fff'],
+      [820, 640, 340, '#5fc8ff'], [230, 800, 220, '#1550c8'],
+      [1420, 720, 280, '#2f8bff'], [980, 120, 170, '#79dbff']
+    ];
+    for (const [cx, cy, r, col] of blobs) {
+      const g = x.createRadialGradient(cx, cy, 0, cx, cy, r);
+      g.addColorStop(0,  col + 'ee');
+      g.addColorStop(.45, col + '66');
+      g.addColorStop(1,  col + '00');
+      x.fillStyle = g;
+      x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2); x.fill();
+    }
+
+    // 細絲:讓細節在扭曲時被拉出來
+    x.globalAlpha = .32;
+    x.strokeStyle = '#bfe6ff'; x.lineWidth = 1.2;
+    for (let i = 0; i < 90; i++) {
+      const cx = Math.random() * W, cy = Math.random() * H;
+      x.beginPath();
+      x.moveTo(cx, cy);
+      for (let s = 1; s <= 12; s++) {
+        x.lineTo(cx + s * 9 * Math.cos(i + s * .4), cy + s * 9 * Math.sin(i * 1.7 + s * .3));
+      }
+      x.stroke();
+    }
+    x.globalAlpha = 1;
+
+    uploadImage(c, W, H);
+  }
+
+  /* ------------------------------------------------------------------ *
+   *  互動
+   * ------------------------------------------------------------------ */
+  const local = e => {
+    const r = stage.getBoundingClientRect();
+    return [e.clientX - r.left, e.clientY - r.top];
+  };
+
+  stage.addEventListener('mouseenter', e => { hovering = true; const [x, y] = local(e); pointer.x = x; pointer.y = y; });
+  stage.addEventListener('mouseleave', () => { hovering = false; pointer.moved = false; });
+  stage.addEventListener('mousemove',  e => { hovering = true; movePointer(...local(e)); });
+  stage.addEventListener('touchstart', e => { hovering = true; const t = e.targetTouches[0]; const [x, y] = local(t); pointer.x = x; pointer.y = y; }, { passive: true });
+  stage.addEventListener('touchend',   () => { hovering = false; pointer.moved = false; }, { passive: true });
+  stage.addEventListener('touchmove',  e => { e.preventDefault(); movePointer(...local(e.targetTouches[0])); }, { passive: false });
+
+  const onResize = () => { resize(); allocate(); };
+  window.addEventListener('resize', onResize);
+  new ResizeObserver(onResize).observe(stage);
+
+  // 面板
+  const bind = (id, valId, key, fmt, realloc) => {
+    const el = document.getElementById(id), out = document.getElementById(valId);
+    const sync = () => {
+      params[key] = parseFloat(el.value);
+      out.textContent = fmt(params[key]);
+      if (realloc) onResize();
+    };
+    el.addEventListener('input', sync);
+    sync();
+  };
+  bind('res',   'v-res',   'resolution',  v => v.toFixed(0), true);
+  bind('size',  'v-size',  'cursorSize',  v => v.toFixed(2));
+  bind('power', 'v-power', 'cursorPower', v => v.toFixed(2));
+  bind('dist',  'v-dist',  'distortion',  v => v.toFixed(2));
+
+  document.getElementById('auto').addEventListener('change', e => { params.auto = e.target.checked; });
+  document.getElementById('reset').addEventListener('click', () => { allocate(); defaultImage(); });
+
+  const fileInput = document.getElementById('file');
+  document.getElementById('pick').addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => {
+    const f = fileInput.files && fileInput.files[0];
+    if (f) loadImageFromURL(URL.createObjectURL(f), true);
+  });
+
+  // 拖放
+  const drop = document.getElementById('drop');
+  let dragDepth = 0;
+  window.addEventListener('dragenter', e => { e.preventDefault(); if (++dragDepth === 1) drop.classList.add('on'); });
+  window.addEventListener('dragover',  e => e.preventDefault());
+  window.addEventListener('dragleave', e => { e.preventDefault(); if (--dragDepth <= 0) { dragDepth = 0; drop.classList.remove('on'); } });
+  window.addEventListener('drop', e => {
+    e.preventDefault(); dragDepth = 0; drop.classList.remove('on');
+    const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f && f.type.startsWith('image/')) loadImageFromURL(URL.createObjectURL(f), true);
+  });
+
+  // 分頁背景與父頁可視狀態共用同一套啟停控制。
+  document.addEventListener('visibilitychange', () => {
+    if (shouldRun()) startLoop();
+    else stopLoop();
+  });
+
+  /* ------------------------------------------------------------------ */
+  resize();
+  allocate();
+  defaultImage();
+  pointer.x = stage.clientWidth * .65;
+  pointer.y = stage.clientHeight * .5;
+  setPreviewActive(previewActive);
+})();
+</script>
+</body>
+</html>

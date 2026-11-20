@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>白澤 BAIZE — 一邊看邏輯，一邊看美感</title>
+<meta name="description" content="白澤接案設計的 3D 螺旋捲動展示：網站、後台系統與流程自動化。">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="nav"><a class="nav-brand" href="/" aria-label="回白澤官網首頁"><svg width="44" height="18" viewBox="0 0 240 100" fill="none" aria-hidden="true"><path d="M31 21L26 3L46 13M34 18C12 18 12 82 34 82M209 21L214 3L194 13M206 18C228 18 228 82 206 82" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="92" cy="50" r="21" fill="var(--blue)"/><circle cx="148" cy="50" r="21" fill="var(--yellow)"/></svg><b>白澤</b><span>BAIZE.STUDIO</span></a><span>WEBSITE · SYSTEM · AUTOMATION · UI / UX</span></header>
+<section id="introTrack" class="intro-track">
+  <div id="introStage" class="intro-stage">
+    <div id="introBlock" class="intro-block">
+      <div class="kicker">FREELANCE DESIGN &amp; DEVELOPMENT — TAIPEI</div>
+      <svg class="baize-face" viewBox="0 0 240 100" fill="none" role="img" aria-label="白澤異色瞳貓臉標誌">
+        <path d="M31 21L26 3L46 13M34 18C12 18 12 82 34 82M209 21L214 3L194 13M206 18C228 18 228 82 206 82" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="92" cy="50" r="21" fill="var(--blue)"/>
+        <circle class="eye-pupil" data-mx="8" data-my="6" cx="92" cy="50" r="7" fill="var(--pupil)"/>
+        <circle cx="148" cy="50" r="21" fill="var(--yellow)"/>
+        <ellipse class="eye-pupil" data-mx="10" data-my="4" cx="148" cy="50" rx="3.4" ry="12" fill="var(--pupil)"/>
+      </svg>
+      <h1>白澤<br>BAIZE</h1>
+      <p>往下捲動，看九件事穿過藍眼與黃眼。</p>
+    </div>
+  </div>
+</section>
+<section id="track" class="track">
+  <div class="sticky">
+    <div id="transitionShade" class="transition-shade"></div>
+    <div id="transitionTitle" class="transition-title">一邊看邏輯<br>一邊看美感</div>
+    <div class="editorial">
+      <h2 class="line1"><span class="bracket">(</span><i class="dot dot-blue"></i>LOGIC</h2>
+      <h2 class="line2">AESTHETIC<i class="dot dot-yellow"></i><span class="bracket">)</span></h2>
+    </div>
+    <canvas id="scene" aria-label="九張白澤服務與作品卡片沿 3D 螺旋移動"></canvas>
+    <div class="progress"><i id="bar"></i></div>
+  </div>
+</section>
+<section id="outro" class="outro"><div id="outroBlock" class="outro-block">
+  <svg class="baize-face baize-face-small" viewBox="0 0 240 100" fill="none" aria-hidden="true">
+    <path d="M31 21L26 3L46 13M34 18C12 18 12 82 34 82M209 21L214 3L194 13M206 18C228 18 228 82 206 82" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="92" cy="50" r="21" fill="var(--blue)"/>
+    <circle class="eye-pupil" data-mx="8" data-my="6" cx="92" cy="50" r="7" fill="var(--pupil)"/>
+    <circle cx="148" cy="50" r="21" fill="var(--yellow)"/>
+    <ellipse class="eye-pupil" data-mx="10" data-my="4" cx="148" cy="50" rx="3.4" ry="12" fill="var(--pupil)"/>
+  </svg>
+  <h2>先聊三十分鐘，<br>再決定要不要開始</h2>
+  <a class="outro-link" href="/#contact">免費諮詢 30 MIN →</a>
+</div></section>
+<script type="module" src="main.js"></script>
+</body>
+</html>

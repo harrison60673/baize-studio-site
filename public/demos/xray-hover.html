@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>X-RAY HOVER — 白澤設計</title>
+<script>
+  if (new URLSearchParams(window.location.search).has("embed")) {
+    document.documentElement.classList.add("is-embed");
+  }
+</script>
+<style>
+/* ============================================================
+   X-RAY HOVER — 白澤設計
+   單檔版本,無外部相依。直接雙擊開啟即可使用。
+   換圖:點下方「載入影像」選你自己的兩張圖(表層 / 透視層)。
+   ============================================================ */
+
+:root{
+  /* 燈箱：刻意單一深色世界，不隨系統主題翻轉 */
+  --ink:        #04070c;
+  --panel:      #080e15;
+  --panel-line: #16232f;
+  --xray:       #6fe6ff;
+  --xray-dim:   #2f7f96;
+  --xray-deep:  #0d3a49;
+  --film:       #e6ddcd;   /* 膠片暖白，表層用 */
+  --film-dim:   #8d8677;
+  --amber:      #ffb454;   /* 只給狀態燈，克制使用 */
+
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, "Roboto Mono", monospace;
+  --sans: system-ui, -apple-system, "Helvetica Neue", "PingFang TC", "Noto Sans TC", sans-serif;
+
+  --r: 170px;      /* 光圈半徑 */
+  --core: 74;      /* 實心核心佔比 %，其餘為柔邊 */
+  --mx: 50%;
+  --my: 50%;
+  --lens: 1;       /* 光圈開合 0–1 */
+}
+
+*{ box-sizing: border-box; }
+
+html{ -webkit-text-size-adjust: 100%; }
+
+body{
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(120% 80% at 50% -10%, #0a1622 0%, transparent 60%),
+    var(--ink);
+  color: var(--film);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap{
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 28px 20px 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* ---------- 儀器頂列 ---------- */
+.bar{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--xray-dim);
+  border-bottom: 1px solid var(--panel-line);
+  padding-bottom: 12px;
+}
+.bar b{ color: var(--xray); font-weight: 500; }
+.led{
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 8px var(--amber);
+  margin-right: 8px;
+  vertical-align: 1px;
+  animation: pulse 2.4s ease-in-out infinite;
+}
+@keyframes pulse{ 0%,100%{opacity:1} 50%{opacity:.25} }
+
+/* ---------- 標題 ---------- */
+.head h1{
+  margin: 0;
+  font-size: clamp(38px, 8vw, 76px);
+  line-height: .94;
+  letter-spacing: -.03em;
+  font-weight: 800;
+  text-wrap: balance;
+}
+.head h1 em{
+  font-style: normal;
+  color: var(--xray);
+  text-shadow: 0 0 26px rgba(111,230,255,.35);
+}
+.head p{
+  margin: 14px 0 0;
+  max-width: 46ch;
+  color: var(--film-dim);
+  font-size: 15px;
+}
+
+/* ============================================================
+   核心：X 光舞台
+   ============================================================ */
+.stage{
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border: 1px solid var(--panel-line);
+  border-radius: 4px;
+  overflow: hidden;
+  background: #060b11;
+  cursor: none;
+  isolation: isolate;   /* 讓 mix-blend 只作用在舞台內 */
+  touch-action: pan-y;  /* 手指仍能捲動頁面，點按則定位光圈 */
+  user-select: none;
+  -webkit-user-select: none;
+}
+.stage:focus-visible{ outline: 2px solid var(--xray); outline-offset: 3px; }
+
+.layer{
+  position: absolute;
+  inset: 0;
+}
+.layer > img,
+.layer > .art{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.layer > img{ display: none; }
+.stage.user-top  .l-top  > img,
+.stage.user-xray .l-xray > img{ display: block; }
+.stage.user-top  .l-top  > .art,
+.stage.user-xray .l-xray > .art{ display: none; }
+
+/* 透視層：只在光圈內顯示 —— 這一行就是整個效果的心臟 */
+.l-xray,
+.l-grid,
+.l-glow{
+  --mask: radial-gradient(
+      circle calc(var(--r) * var(--lens)) at var(--mx) var(--my),
+      #000 calc(var(--core) * 1%),
+      transparent 100%);
+  -webkit-mask-image: var(--mask);
+          mask-image: var(--mask);
+}
+.l-xray{ filter: saturate(1.15) contrast(1.06); }
+
+/* 光圈內的座標網格（原版 Kinetic Grid 的功能等價層） */
+.l-grid{
+  --g: 34px;
+  background-image:
+    linear-gradient(rgba(111,230,255,.30) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(111,230,255,.30) 1px, transparent 1px);
+  background-size: var(--g) var(--g);
+  mix-blend-mode: screen;
+  opacity: .55;
+}
+.stage.no-grid .l-grid{ display: none; }
+
+/* 射束輝光：讓光圈裡真的像有一束冷光打進去 */
+.l-glow{
+  background: radial-gradient(circle at var(--mx) var(--my),
+      rgba(111,230,255,.30) 0%, rgba(111,230,255,.10) 55%, transparent 100%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+/* 鏡頭環 + 十字準星 */
+.lens{
+  position: absolute;
+  left: var(--mx);
+  top: var(--my);
+  width: calc(var(--r) * 2 * var(--lens));
+  height: calc(var(--r) * 2 * var(--lens));
+  margin-left: calc(var(--r) * -1 * var(--lens));
+  margin-top:  calc(var(--r) * -1 * var(--lens));
+  border-radius: 50%;
+  border: 1px solid rgba(111,230,255,.7);
+  box-shadow:
+    0 0 0 1px rgba(4,7,12,.35),
+    0 0 40px rgba(111,230,255,.22),
+    inset 0 0 60px rgba(111,230,255,.10);
+  pointer-events: none;
+  opacity: var(--lens);
+}
+.lens::before,
+.lens::after{
+  content: "";
+  position: absolute;
+  background: rgba(111,230,255,.45);
+}
+.lens::before{ left: 50%; top: 42%; width: 1px; height: 16%; }
+.lens::after{ top: 50%; left: 42%; height: 1px; width: 16%; }
+
+/* CRT 掃描線：極細線 + 微模糊 + overlay 混合 */
+.scan{
+  position: absolute;
+  inset: -4px;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0) 0 2px,
+      rgba(0,0,0,.55) 2px 3px);
+  filter: blur(.7px);
+  mix-blend-mode: overlay;
+  opacity: var(--scan, .38);
+  animation: drift 9s linear infinite;
+}
+@keyframes drift{ to{ transform: translateY(-30px); } }
+
+/* 訊號閃爍：兩層不同步的暗幕，交錯出不規則的呼吸 */
+.flick{ position: absolute; inset: 0; pointer-events: none; background: #000; }
+.flick-a{ animation: fa 5.3s steps(1,end) infinite; }
+.flick-b{ animation: fb 3.7s ease-in-out infinite; animation-delay: -1.1s; }
+@keyframes fa{
+  0%, 93%   { opacity: 0; }
+  94%, 95%  { opacity: .34; }
+  96%       { opacity: 0; }
+  97%       { opacity: .18; }
+  98%, 100% { opacity: 0; }
+}
+@keyframes fb{
+  0%,100%{ opacity: .04; }
+  50%    { opacity: .11; }
+}
+.stage.no-flicker .flick{ display: none; }
+
+/* 邊角暗角，讓燈箱有玻璃感 */
+.vig{
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(120% 100% at 50% 50%, transparent 55%, rgba(0,0,0,.6) 100%);
+}
+
+/* 舞台角落的讀數 */
+.hud{
+  position: absolute;
+  pointer-events: none;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .18em;
+  color: var(--xray);
+  text-transform: uppercase;
+  /* 底下可能是淺色成品也可能是深藍藍圖，給它一片自己的暗底才讀得到 */
+  background: rgba(4,7,12,.72);
+  padding: 4px 8px;
+  border-radius: 2px;
+}
+.hud-tl{ left: 12px; top: 12px; }
+.hud-br{ right: 12px; bottom: 12px; font-variant-numeric: tabular-nums; }
+
+/* ---------- 署名 ---------- */
+.sign{
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 14px;
+  margin-top: -6px;
+}
+.sign .zh{
+  font-size: clamp(24px, 5vw, 40px);
+  font-weight: 700;
+  letter-spacing: .32em;
+  text-indent: .32em;   /* 補回字距造成的視覺偏移 */
+  color: var(--film);
+}
+.sign .en{
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .3em;
+  color: var(--xray-dim);
+  text-transform: uppercase;
+}
+
+/* ---------- 控制台 ---------- */
+.console{
+  border: 1px solid var(--panel-line);
+  border-radius: 4px;
+  background: var(--panel);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 22px 28px;
+  padding: 22px 24px;
+}
+.ctrl{ display: flex; flex-direction: column; gap: 8px; }
+.ctrl label{
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--xray-dim);
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.ctrl label span{ color: var(--xray); font-variant-numeric: tabular-nums; }
+
+input[type=range]{
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 2px;
+  background: var(--xray-deep);
+  border-radius: 2px;
+  outline: none;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance: none;
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  background: var(--xray);
+  border: 0;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(111,230,255,.6);
+}
+input[type=range]::-moz-range-thumb{
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  background: var(--xray);
+  border: 0;
+  cursor: pointer;
+}
+input[type=range]:focus-visible{ outline: 2px solid var(--xray); outline-offset: 6px; }
+
+.switches{ display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
+.btn{
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--xray-dim);
+  background: transparent;
+  border: 1px solid var(--panel-line);
+  border-radius: 2px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: color .18s, border-color .18s, background .18s;
+}
+.btn:hover{ color: var(--xray); border-color: var(--xray-deep); }
+.btn:focus-visible{ outline: 2px solid var(--xray); outline-offset: 2px; }
+.btn[aria-pressed="true"]{
+  color: var(--ink);
+  background: var(--xray);
+  border-color: var(--xray);
+}
+.btn input[type=file]{ display: none; }
+
+/* ---------- 拆解說明 ---------- */
+.notes{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.note{
+  background: var(--panel);
+  border: 1px solid var(--panel-line);
+  border-radius: 4px;
+  padding: 20px 22px;
+}
+.note h3{
+  margin: 0 0 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--xray);
+  font-weight: 500;
+}
+.note p{ margin: 0; font-size: 13.5px; color: var(--film-dim); line-height: 1.62; }
+.note code{
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--film);
+  background: rgba(111,230,255,.07);
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
+footer{
+  border-top: 1px solid var(--panel-line);
+  padding-top: 18px;
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--xray-dim);
+}
+
+@media (prefers-reduced-motion: reduce){
+  .scan, .led{ animation: none; }
+  .flick{ display: none; }
+}
+@media (max-width: 620px){
+  .stage{ aspect-ratio: 3 / 4; }
+  .console{ padding: 18px; }
+}
+
+/* 官網卡片嵌入模式：只保留作者原始 X-Ray 舞台。 */
+html.is-embed,
+html.is-embed body{
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+.is-embed .wrap{
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  padding: 0;
+  gap: 0;
+}
+.is-embed .bar,
+.is-embed .head,
+.is-embed .sign,
+.is-embed .console,
+.is-embed .notes,
+.is-embed footer{ display: none !important; }
+.is-embed .stage{
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto !important;
+  border: 0;
+  border-radius: 0;
+}
+html.is-preview-paused *,
+html.is-preview-paused *::before,
+html.is-preview-paused *::after{ animation-play-state: paused !important; }
+html.is-embed:not(.is-interacting) *,
+html.is-embed:not(.is-interacting) *::before,
+html.is-embed:not(.is-interacting) *::after{ animation-play-state: paused !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="bar">
+    <div><span class="led"></span>白澤設計 · 影像實驗室</div>
+    <div>模式 <b>X-RAY HOVER</b> — 依 Framer University 效果重製</div>
+  </div>
+
+  <header class="head">
+    <h1>看穿<em>表層</em><br>底下的結構</h1>
+    <p>把游標移到畫面上。光圈經過的地方，成品退去，露出它底下的版面骨架。手指觸控同樣可用；沒人操作時它會自己巡場。</p>
+  </header>
+
+  <!-- ===== 舞台 ===== -->
+  <div class="stage" id="stage" tabindex="0" role="img"
+       aria-label="X 光懸停效果：游標經過處，海報成品被透視成版面線框圖">
+
+    <!-- 表層：成品 -->
+    <div class="layer l-top">
+      <img id="imgTop" alt="">
+      <svg class="art" viewBox="0 0 1200 750" preserveAspectRatio="xMinYMid slice" aria-hidden="true">
+        <rect width="1200" height="750" fill="#e6ddcd"/>
+        <circle cx="905" cy="300" r="185" fill="#141a20"/>
+        <text x="96" y="292" fill="#141a20" font-family="system-ui, -apple-system, PingFang TC, sans-serif"
+              font-size="150" font-weight="800" letter-spacing="6">白澤</text>
+        <text x="100" y="360" fill="#6f6a5e" font-family="ui-monospace, Menlo, monospace"
+              font-size="21" letter-spacing="9">BAIZE DESIGN STUDIO</text>
+        <rect x="100" y="430" width="360" height="1" fill="#b6ae9d"/>
+        <text x="100" y="482" fill="#4a463d" font-family="system-ui, -apple-system, PingFang TC, sans-serif"
+              font-size="25">品牌識別 · 網頁設計 · 動態影像</text>
+        <text x="100" y="524" fill="#4a463d" font-family="system-ui, -apple-system, PingFang TC, sans-serif"
+              font-size="25">2026 作品輯 — 第三卷</text>
+        <rect x="100" y="600" width="146" height="46" rx="23" fill="#141a20"/>
+        <text x="132" y="631" fill="#e6ddcd" font-family="ui-monospace, Menlo, monospace"
+              font-size="17" letter-spacing="2">CONTACT</text>
+      </svg>
+    </div>
+
+    <!-- 透視層：藍圖 -->
+    <div class="layer l-xray">
+      <img id="imgXray" alt="">
+      <svg class="art" viewBox="0 0 1200 750" preserveAspectRatio="xMinYMid slice" aria-hidden="true">
+        <rect width="1200" height="750" fill="#051c27"/>
+        <g stroke="#6fe6ff" fill="none" stroke-width="1.5">
+          <circle cx="905" cy="300" r="185"/>
+          <circle cx="905" cy="300" r="122" stroke-dasharray="5 7" opacity=".6"/>
+          <circle cx="905" cy="300" r="4" fill="#6fe6ff"/>
+          <path d="M905 100 V500 M705 300 H1105" stroke-dasharray="3 9" opacity=".5"/>
+          <rect x="96" y="176" width="392" height="132" stroke-dasharray="6 5" opacity=".75"/>
+          <rect x="100" y="336" width="292" height="32" stroke-dasharray="6 5" opacity=".5"/>
+          <rect x="100" y="455" width="470" height="80" stroke-dasharray="6 5" opacity=".5"/>
+          <rect x="100" y="600" width="146" height="46" rx="23"/>
+          <path d="M100 430 H460"/>
+          <path d="M60 176 V308 M52 176 H68 M52 308 H68" opacity=".8"/>
+          <path d="M96 700 H488 M96 692 V708 M488 692 V708" opacity=".8"/>
+        </g>
+        <text x="96" y="292" fill="none" stroke="#6fe6ff" stroke-width="1.6"
+              font-family="system-ui, -apple-system, PingFang TC, sans-serif"
+              font-size="150" font-weight="800" letter-spacing="6">白澤</text>
+        <text x="100" y="360" fill="none" stroke="#6fe6ff" stroke-width=".9"
+              font-family="ui-monospace, Menlo, monospace" font-size="21" letter-spacing="9">BAIZE DESIGN STUDIO</text>
+        <g fill="#9defff" font-family="ui-monospace, Menlo, monospace" font-size="15" letter-spacing="1.5">
+          <text x="26" y="248" transform="rotate(-90 26 248)">132 PX</text>
+          <text x="248" y="730" text-anchor="middle">392 PX</text>
+          <text x="1010" y="180">Ø 370</text>
+          <text x="100" y="146">BASELINE 12 · COL 6 · GUTTER 24</text>
+          <text x="596" y="640">SPACING TOKEN — 8 / 16 / 32 / 64</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="layer l-grid"></div>
+    <div class="layer l-glow"></div>
+    <div class="flick flick-a"></div>
+    <div class="flick flick-b"></div>
+    <div class="scan"></div>
+    <div class="vig"></div>
+    <div class="lens" id="lens"></div>
+    <div class="hud hud-tl">SCAN · LIVE</div>
+    <div class="hud hud-br" id="hud">X 000 · Y 000</div>
+  </div>
+
+  <!-- 署名 -->
+  <div class="sign">
+    <span class="zh">白澤設計</span>
+    <span class="en">Baize Design</span>
+  </div>
+
+  <!-- ===== 控制台 ===== -->
+  <div class="console">
+    <div class="ctrl">
+      <label for="rRad">光圈半徑 <span id="vRad">170px</span></label>
+      <input type="range" id="rRad" min="60" max="360" value="170">
+    </div>
+    <div class="ctrl">
+      <label for="rFeat">邊緣柔化 <span id="vFeat">26%</span></label>
+      <input type="range" id="rFeat" min="0" max="95" value="26">
+    </div>
+    <div class="ctrl">
+      <label for="rScan">掃描線 <span id="vScan">38%</span></label>
+      <input type="range" id="rScan" min="0" max="100" value="38">
+    </div>
+    <div class="ctrl">
+      <label for="rEase">跟隨阻尼 <span id="vEase">0.18</span></label>
+      <input type="range" id="rEase" min="4" max="100" value="18">
+    </div>
+    <div class="ctrl" style="grid-column: 1 / -1;">
+      <label>圖層</label>
+      <div class="switches">
+        <button class="btn" id="bGrid"    aria-pressed="true">座標網格</button>
+        <button class="btn" id="bFlicker" aria-pressed="true">訊號閃爍</button>
+        <label class="btn" tabindex="0" role="button">載入表層影像<input type="file" id="fTop" accept="image/*"></label>
+        <label class="btn" tabindex="0" role="button">載入透視影像<input type="file" id="fXray" accept="image/*"></label>
+        <button class="btn" id="bReset">回到範例</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 拆解 ===== -->
+  <div class="notes">
+    <div class="note">
+      <h3>01 · 遮罩揭露</h3>
+      <p>兩層同尺寸影像疊放，下層用 <code>mask-image</code> 的放射漸層開一個跟著游標跑的圓洞。漸層中段的透明過渡就是柔邊，不需要任何函式庫。</p>
+    </div>
+    <div class="note">
+      <h3>02 · 阻尼跟隨</h3>
+      <p>指標座標不直接寫進 CSS，先在 <code>requestAnimationFrame</code> 裡做線性插值。慢一拍的重量感，是這個效果好看與否的分界線。</p>
+    </div>
+    <div class="note">
+      <h3>03 · CRT 疊層</h3>
+      <p>重複線性漸層畫出 1px 掃描線，加 0.7px 模糊與 <code>overlay</code> 混合模式，再緩慢位移。原版在 Framer 裡是貼圖平鋪，原理相同。</p>
+    </div>
+    <div class="note">
+      <h3>04 · 錯位閃爍</h3>
+      <p>兩片黑幕各跑一組週期不互為倍數的動畫，其中一組用 <code>steps()</code> 做硬切。錯開的相位讓閃爍讀起來是隨機的。</p>
+    </div>
+  </div>
+
+  <footer>
+    <div>白澤設計 — Baize Design</div>
+    <div>單檔 HTML · 無相依套件 · 可自由改用</div>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var stage = document.getElementById("stage");
+  var lens  = document.getElementById("lens");
+  var hud   = document.getElementById("hud");
+  var embed = document.documentElement.classList.contains("is-embed");
+  var previewActive = !embed;
+  var raf = 0;
+
+  var rect = stage.getBoundingClientRect();
+  var tx = rect.width / 2, ty = rect.height / 2;   // 目標點
+  var cx = tx, cy = ty;                            // 目前點
+  var ease = 0.18;
+  var open = 0;                                    // 光圈開合，進出場用
+  var active = false;                              // 指標是否在舞台上
+
+  function measure(){ rect = stage.getBoundingClientRect(); }
+  window.addEventListener("resize", measure);
+  window.addEventListener("scroll", measure, { passive: true });
+
+  function track(e){
+    measure();
+    tx = e.clientX - rect.left;
+    ty = e.clientY - rect.top;
+    active = true;
+    document.documentElement.classList.add("is-interacting");
+    startLoop();
+  }
+  stage.addEventListener("pointerenter", function(){
+    active = true;
+    document.documentElement.classList.add("is-interacting");
+    startLoop();
+  });
+  stage.addEventListener("pointermove", track);
+  stage.addEventListener("pointerdown", track);
+  stage.addEventListener("pointerleave", function(){
+    active = false;
+    document.documentElement.classList.remove("is-interacting");
+    startLoop();
+  });
+
+  // 鍵盤操作：方向鍵推動光圈，讓不用滑鼠的人也能玩
+  stage.addEventListener("keydown", function(e){
+    var step = e.shiftKey ? 60 : 20, hit = true;
+    if (e.key === "ArrowLeft")       tx -= step;
+    else if (e.key === "ArrowRight") tx += step;
+    else if (e.key === "ArrowUp")    ty -= step;
+    else if (e.key === "ArrowDown")  ty += step;
+    else hit = false;
+    if (hit){
+      e.preventDefault();
+      active = true;
+      document.documentElement.classList.add("is-interacting");
+      tx = Math.max(0, Math.min(rect.width,  tx));
+      ty = Math.max(0, Math.min(rect.height, ty));
+      startLoop();
+    }
+  });
+  stage.addEventListener("focus", function(){
+    measure();
+    active = true;
+    document.documentElement.classList.add("is-interacting");
+    startLoop();
+  });
+  stage.addEventListener("blur", function(){
+    active = false;
+    document.documentElement.classList.remove("is-interacting");
+    startLoop();
+  });
+
+  function shouldRun(){ return previewActive && !document.hidden; }
+  function stopLoop(){
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+  }
+  function startLoop(){
+    if (!raf && shouldRun()) raf = requestAnimationFrame(frame);
+  }
+  function setPreviewActive(next){
+    previewActive = Boolean(next);
+    document.documentElement.classList.toggle("is-preview-paused", !previewActive);
+    if (shouldRun()) startLoop();
+    else stopLoop();
+  }
+
+  window.addEventListener("message", function(event){
+    var data = event.data;
+    if (event.source !== parent || !data || data.type !== "baize:preview-active") return;
+    setPreviewActive(data.active);
+  });
+
+  document.addEventListener("visibilitychange", function(){
+    if (shouldRun()) startLoop();
+    else stopLoop();
+  });
+
+  function frame(){
+    if (!shouldRun()){ raf = 0; return; }
+
+    cx += (tx - cx) * ease;
+    cy += (ty - cy) * ease;
+
+    var want = active ? 1 : 0;
+    open += (want - open) * 0.08;
+
+    stage.style.setProperty("--mx", cx.toFixed(1) + "px");
+    stage.style.setProperty("--my", cy.toFixed(1) + "px");
+    stage.style.setProperty("--lens", open.toFixed(3));
+
+    hud.textContent = "X " + String(Math.round(cx)).padStart(3, "0") +
+                      " · Y " + String(Math.round(cy)).padStart(3, "0");
+
+    var moving = Math.abs(tx - cx) > 0.05 || Math.abs(ty - cy) > 0.05;
+    if (active || open > 0.002 || moving) raf = requestAnimationFrame(frame);
+    else {
+      open = 0;
+      stage.style.setProperty("--lens", "0");
+      raf = 0;
+    }
+  }
+  setPreviewActive(previewActive);
+
+  // ---- 控制台 ----
+  // 小螢幕上 170px 的光圈幾乎佔滿畫面，開場先給一個合身的值
+  if (window.innerWidth < 620){ document.getElementById("rRad").value = "110"; }
+
+  function bind(id, out, fn){
+    var el = document.getElementById(id);
+    var lb = document.getElementById(out);
+    function apply(){ lb.textContent = fn(el.value); }
+    el.addEventListener("input", apply);
+    apply();
+  }
+  bind("rRad", "vRad", function(v){
+    stage.style.setProperty("--r", v + "px");
+    return v + "px";
+  });
+  bind("rFeat", "vFeat", function(v){
+    stage.style.setProperty("--core", String(100 - v));
+    return v + "%";
+  });
+  bind("rScan", "vScan", function(v){
+    stage.style.setProperty("--scan", String(v / 100));
+    return v + "%";
+  });
+  bind("rEase", "vEase", function(v){
+    ease = v / 100;
+    return ease.toFixed(2);
+  });
+
+  function toggle(id, cls){
+    var b = document.getElementById(id);
+    b.addEventListener("click", function(){
+      var on = b.getAttribute("aria-pressed") === "true";
+      b.setAttribute("aria-pressed", String(!on));
+      stage.classList.toggle(cls, on);
+    });
+  }
+  toggle("bGrid", "no-grid");
+  toggle("bFlicker", "no-flicker");
+
+  // ---- 換成自己的圖 ----
+  var urls = { top: null, xray: null };
+  function load(input, imgId, key, cls){
+    document.getElementById(input).addEventListener("change", function(e){
+      var f = e.target.files && e.target.files[0];
+      if (!f) return;
+      if (urls[key]) URL.revokeObjectURL(urls[key]);
+      urls[key] = URL.createObjectURL(f);
+      document.getElementById(imgId).src = urls[key];
+      stage.classList.add(cls);
+    });
+  }
+  load("fTop",  "imgTop",  "top",  "user-top");
+  load("fXray", "imgXray", "xray", "user-xray");
+
+  // label 包住的 file input：空白/Enter 也能觸發
+  Array.prototype.forEach.call(document.querySelectorAll('label.btn'), function(l){
+    l.addEventListener("keydown", function(e){
+      if (e.key === "Enter" || e.key === " "){ e.preventDefault(); l.querySelector("input").click(); }
+    });
+  });
+
+  document.getElementById("bReset").addEventListener("click", function(){
+    stage.classList.remove("user-top", "user-xray");
+    ["top","xray"].forEach(function(k){
+      if (urls[k]){ URL.revokeObjectURL(urls[k]); urls[k] = null; }
+    });
+    document.getElementById("fTop").value = "";
+    document.getElementById("fXray").value = "";
+  });
+})();
+</script>
+</body>
+</html>

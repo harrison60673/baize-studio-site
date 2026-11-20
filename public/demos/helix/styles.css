@@ -1,0 +1,75 @@
+
+:root{--paper:#14120f;--ink:#F2ECE2;--night:#0e0d0b;--blue:oklch(.62 .14 250);--yellow:oklch(.76 .14 95);--pupil:#191714;--logic:color-mix(in oklab,oklch(.66 .14 250) 34%,#F2ECE2);--aesthetic:color-mix(in oklab,oklch(.79 .14 95) 34%,#F2ECE2);--sans:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang TC','Noto Sans TC','Microsoft JhengHei',sans-serif;--mono:'IBM Plex Mono',ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans)}
+body{overflow-x:hidden}
+.nav{position:fixed;z-index:20;top:0;left:0;right:0;padding:16px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px;font:10px/1.4 var(--mono);letter-spacing:.08em;color:var(--ink)}
+.nav-brand{display:flex;align-items:center;gap:9px;color:inherit;text-decoration:none}
+.nav-brand b{font:600 13px/1 var(--sans);letter-spacing:.08em}
+.outro{min-height:100vh;padding:8vw;display:flex;flex-direction:column;justify-content:center;background:var(--paper);color:var(--ink);overflow:hidden;will-change:background-color,color}
+.intro-track{height:100vh;background:var(--night);overflow:hidden}
+.intro-stage{position:relative;height:100vh;overflow:hidden;background:var(--night);color:var(--ink);will-change:background-color,color}
+.intro-block{position:absolute;left:8vw;right:8vw;top:50%;transform:translateY(-50%);will-change:transform,color;transform-origin:left top}
+.kicker{font:10px/1.5 var(--mono);letter-spacing:.18em}
+.baize-face{display:block;width:clamp(180px,24vw,380px);height:auto;margin:clamp(20px,4vh,44px) 0 clamp(8px,2vh,20px) -1.5%;overflow:visible}
+.baize-face-small{width:clamp(130px,14vw,220px);margin-top:0}
+.outro-link{display:inline-block;margin-top:clamp(20px,3vw,40px);padding-bottom:6px;border-bottom:1px solid currentColor;color:inherit;font:12px/1.4 var(--mono);letter-spacing:.08em;text-decoration:none}
+.outro-link:hover{color:var(--aesthetic)}
+.outro-link:focus-visible,.nav-brand:focus-visible{outline:2px solid var(--yellow);outline-offset:4px}
+.intro-block h1{font-size:clamp(56px,9vw,140px);font-weight:600;letter-spacing:-.05em;line-height:.94;margin:.1em 0 .2em}
+.outro h2{font-size:clamp(34px,6.2vw,100px);font-weight:600;letter-spacing:-.03em;line-height:1.14;margin:.15em 0}
+@media (max-height:640px){.baize-face{display:none}}
+.outro-block{will-change:transform,color}
+.intro-block p{margin:0;font-size:clamp(12px,1vw,18px)}
+.track{height:690vh}
+.sticky{position:sticky;top:0;height:100vh;overflow:hidden;background:var(--paper)}
+.transition-shade{position:absolute;inset:0;z-index:0;background:var(--night);pointer-events:none;will-change:opacity}
+.transition-title{position:absolute;z-index:3;left:50%;top:50%;transform:translate(-50%,-50%);width:min(88vw,1400px);text-align:center;font-size:clamp(30px,5vw,88px);font-weight:600;letter-spacing:-.02em;line-height:1.12;color:var(--ink);opacity:0;pointer-events:none;will-change:opacity,transform}
+#scene{position:absolute;inset:0;width:100%;height:100%;z-index:5;display:block}
+.editorial{position:absolute;inset:0;z-index:2;pointer-events:none}
+.editorial h2{
+  position:absolute;
+  margin:0;
+  font-size:clamp(42px,7.4vw,132px);
+  font-weight:500;
+  letter-spacing:-.065em;
+  line-height:.8;
+  white-space:nowrap;
+  will-change:transform,opacity;
+}
+.bracket{font-weight:300;opacity:.72}
+.dot{display:inline-block;flex:none;width:.62em;height:.62em;border-radius:50%}
+.dot-blue{background:var(--blue)}
+.dot-yellow{background:var(--yellow)}
+.editorial h2{display:flex;align-items:center;gap:.18em}
+.line1{left:20%;top:29%;color:var(--logic)}
+.line2{left:43%;top:49%;color:var(--aesthetic)}
+
+/* Keep the same editorial relationship as the desktop design while
+   allowing it to scale and reposition on narrower viewports. */
+@media (max-width:1200px){
+  .editorial h2{font-size:clamp(46px,8.4vw,104px)}
+  .line1{left:16%;top:30%}
+  .line2{left:32%;top:49%}
+  }
+
+@media (max-width:768px){
+  .editorial h2{
+    font-size:clamp(36px,10.4vw,76px);
+    letter-spacing:-.07em;
+  }
+  .line1{left:6%;top:27%}
+  .line2{left:14%;top:45%}
+  }
+
+@media (max-width:480px){
+  .editorial h2{font-size:clamp(30px,10.6vw,52px)}
+  .line1{left:6%;top:26%}
+  .line2{left:8%;top:43%}
+  .nav>span:last-child,.nav-brand span{display:none}
+  }
+.progress{position:absolute;left:2%;right:2%;bottom:2%;height:1px;background:rgba(242,236,226,.14);z-index:10}
+.progress i{display:block;width:100%;height:100%;background:linear-gradient(90deg,var(--blue),var(--yellow));transform-origin:left;transform:scaleX(0)}
+
+/* Homepage opening: same scroll timeline; the parent page takes over after the grid. */
+.is-intro .nav,.is-intro .outro{display:none}
